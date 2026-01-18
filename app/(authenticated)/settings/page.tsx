@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -11,15 +11,17 @@ import {
   ArrowLeft,
   LogOut,
   Camera,
+  Check,
+  Loader2,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTheme, ThemeType, themeColors } from "@/context/ThemeContext";
 
 type TabType = "ai-config" | "profile" | "background";
 type PersonalityType = "soothing" | "clear" | "bubbly";
 type ValidationDepthType = "concise" | "deep";
 type ActionStyleType = "gentle" | "direct";
-type ThemeType = "classic" | "soft-blue" | "lemon" | "mint";
 
 const personalities = [
   {
@@ -27,56 +29,40 @@ const personalities = [
     name: "Soothing",
     icon: Heart,
     description: "Soft, calm, reassuring",
-    color: "#FFAEBC",
+    color: "#FF8FA3",
   },
   {
     id: "clear" as PersonalityType,
     name: "Clear",
     icon: Zap,
     description: "Honest, logical",
-    color: "#7EC8E3",
+    color: "#5BB5D5",
   },
   {
     id: "bubbly" as PersonalityType,
     name: "Bubbly",
     icon: Sparkles,
     description: "High energy",
-    color: "#FBE7C6",
+    color: "#F5C842",
   },
 ];
 
-const themes = [
-  {
-    id: "classic" as ThemeType,
-    name: "Classic",
-    bg: "#FFF9F5",
-    accent: "#FFAEBC",
-  },
-  {
-    id: "soft-blue" as ThemeType,
-    name: "Soft Blue",
-    bg: "#F0F7FF",
-    accent: "#7EC8E3",
-  },
-  {
-    id: "lemon" as ThemeType,
-    name: "Lemon",
-    bg: "#FFFEF0",
-    accent: "#FBE7C6",
-  },
-  {
-    id: "mint" as ThemeType,
-    name: "Mint",
-    bg: "#F0FFF4",
-    accent: "#B4F8C8",
-  },
+const themes: { id: ThemeType; name: string }[] = [
+  { id: "classic", name: "Classic" },
+  { id: "soft-blue", name: "Soft Blue" },
+  { id: "lemon", name: "Lemon" },
+  { id: "mint", name: "Mint" },
 ];
 
 export default function SettingsPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { theme: selectedTheme, setTheme: setSelectedTheme, colors } = useTheme();
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("ai-config");
+  const [userId, setUserId] = useState<string | null>(null);
 
   // AI Config state
   const [personality, setPersonality] = useState<PersonalityType>("soothing");
@@ -88,32 +74,131 @@ export default function SettingsPage() {
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userInitial, setUserInitial] = useState("A");
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
 
-  // Background state
-  const [selectedTheme, setSelectedTheme] = useState<ThemeType>("classic");
-
+  // Load user and preferences
   useEffect(() => {
-    const checkAuth = async () => {
+    const loadUserAndPreferences = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (!session) {
         router.push("/login");
-      } else {
-        const name =
-          session.user.user_metadata?.full_name ||
-          session.user.email?.split("@")[0] ||
-          "User";
-        setUserName(name);
-        setUserEmail(session.user.email || "");
-        setUserInitial(name.charAt(0).toUpperCase());
+        return;
       }
+
+      setUserId(session.user.id);
+      const name =
+        session.user.user_metadata?.full_name ||
+        session.user.email?.split("@")[0] ||
+        "User";
+      setUserName(name);
+      setUserEmail(session.user.email || "");
+      setUserInitial(name.charAt(0).toUpperCase());
+
+      // Load preferences from database
+      const { data: preferences } = await supabase
+        .from("preferences")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (preferences) {
+        setPersonality(preferences.ai_personality as PersonalityType);
+        setValidationDepth(preferences.ai_style as ValidationDepthType);
+        setActionStyle(preferences.ai_action as ActionStyleType);
+        setSelectedTheme(
+          (preferences.background_colour as ThemeType) || "classic"
+        );
+      }
+
       setLoading(false);
     };
 
-    checkAuth();
-  }, [router, supabase.auth]);
+    loadUserAndPreferences();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Save preferences to database
+  const savePreferences = useCallback(
+    async (
+      newPersonality: PersonalityType,
+      newStyle: ValidationDepthType,
+      newAction: ActionStyleType,
+      newTheme: ThemeType
+    ) => {
+      if (!userId) return;
+
+      setSaving(true);
+      setSaveSuccess(false);
+
+      const { error } = await supabase.from("preferences").upsert(
+        {
+          user_id: userId,
+          ai_personality: newPersonality,
+          ai_style: newStyle,
+          ai_action: newAction,
+          background_colour: newTheme,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "user_id",
+        }
+      );
+
+      setSaving(false);
+
+      if (!error) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2000);
+      }
+    },
+    [userId, supabase]
+  );
+
+  // Handle personality change
+  const handlePersonalityChange = (newPersonality: PersonalityType) => {
+    setPersonality(newPersonality);
+    savePreferences(newPersonality, validationDepth, actionStyle, selectedTheme);
+  };
+
+  // Handle validation depth change
+  const handleValidationDepthChange = (newDepth: ValidationDepthType) => {
+    setValidationDepth(newDepth);
+    savePreferences(personality, newDepth, actionStyle, selectedTheme);
+  };
+
+  // Handle action style change
+  const handleActionStyleChange = (newAction: ActionStyleType) => {
+    setActionStyle(newAction);
+    savePreferences(personality, validationDepth, newAction, selectedTheme);
+  };
+
+  // Handle theme change
+  const handleThemeChange = (newTheme: ThemeType) => {
+    setSelectedTheme(newTheme);
+    savePreferences(personality, validationDepth, actionStyle, newTheme);
+  };
+
+  // Save profile (name) to Supabase auth
+  const handleSaveProfile = async () => {
+    setProfileSaving(true);
+    setProfileSaveSuccess(false);
+
+    const { error } = await supabase.auth.updateUser({
+      data: { full_name: userName },
+    });
+
+    setProfileSaving(false);
+
+    if (!error) {
+      setUserInitial(userName.charAt(0).toUpperCase());
+      setProfileSaveSuccess(true);
+      setTimeout(() => setProfileSaveSuccess(false), 2000);
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -127,14 +212,17 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FFF9F5]">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: colors.bg }}
+      >
         <div className="animate-pulse text-2xl text-[#7A7A7A]">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF9F5]">
+    <div className="min-h-screen" style={{ backgroundColor: colors.bg }}>
       {/* Top Navigation Bar */}
       <nav className="bg-white border-b border-[#F0F0F0] px-6 py-4 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -149,6 +237,19 @@ export default function SettingsPage() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-3">
+            {/* Save Status Indicator */}
+            {saving && (
+              <div className="flex items-center gap-2 text-[#7A7A7A] text-sm">
+                <Loader2 size={16} className="animate-spin" />
+                <span>Saving...</span>
+              </div>
+            )}
+            {saveSuccess && (
+              <div className="flex items-center gap-2 text-green-600 text-sm">
+                <Check size={16} />
+                <span>Saved!</span>
+              </div>
+            )}
             <button
               onClick={handleLogout}
               className="w-10 h-10 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#7A7A7A] hover:bg-red-50 hover:text-red-500 transition-all cursor-pointer"
@@ -164,7 +265,10 @@ export default function SettingsPage() {
       <main className="max-w-4xl mx-auto px-6 py-10">
         {/* Page Header */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-[#FFAEBC] rounded-2xl flex items-center justify-center">
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center"
+            style={{ backgroundColor: colors.accent }}
+          >
             <Flower2 size={24} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-[#4A4A4A]">
@@ -229,7 +333,7 @@ export default function SettingsPage() {
                   return (
                     <button
                       key={p.id}
-                      onClick={() => setPersonality(p.id)}
+                      onClick={() => handlePersonalityChange(p.id)}
                       className={`p-6 rounded-2xl border-2 transition-all cursor-pointer text-left ${
                         isSelected
                           ? "border-[#4A4A4A] bg-white shadow-md"
@@ -267,7 +371,7 @@ export default function SettingsPage() {
                 </h3>
                 <div className="flex gap-2 bg-[#F5F5F5] p-1 rounded-xl">
                   <button
-                    onClick={() => setValidationDepth("concise")}
+                    onClick={() => handleValidationDepthChange("concise")}
                     className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                       validationDepth === "concise"
                         ? "bg-white text-[#4A4A4A] shadow-sm"
@@ -277,7 +381,7 @@ export default function SettingsPage() {
                     Concise Hug
                   </button>
                   <button
-                    onClick={() => setValidationDepth("deep")}
+                    onClick={() => handleValidationDepthChange("deep")}
                     className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                       validationDepth === "deep"
                         ? "bg-white text-[#4A4A4A] shadow-sm"
@@ -296,7 +400,7 @@ export default function SettingsPage() {
                 </h3>
                 <div className="flex gap-2 bg-[#F5F5F5] p-1 rounded-xl">
                   <button
-                    onClick={() => setActionStyle("gentle")}
+                    onClick={() => handleActionStyleChange("gentle")}
                     className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                       actionStyle === "gentle"
                         ? "bg-white text-[#4A4A4A] shadow-sm"
@@ -306,7 +410,7 @@ export default function SettingsPage() {
                     Gently Nudge
                   </button>
                   <button
-                    onClick={() => setActionStyle("direct")}
+                    onClick={() => handleActionStyleChange("direct")}
                     className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                       actionStyle === "direct"
                         ? "bg-white text-[#4A4A4A] shadow-sm"
@@ -335,7 +439,7 @@ export default function SettingsPage() {
                   <p className="text-sm text-[#7A7A7A] mb-1">AI Summary</p>
                   <p className="text-lg text-[#4A4A4A]">
                     I&apos;ll approach our conversations as{" "}
-                    <span className="font-bold text-[#FFAEBC]">
+                    <span className="font-bold" style={{ color: colors.accent }}>
                       {getPersonalityText()}
                     </span>
                     , with{" "}
@@ -392,7 +496,6 @@ export default function SettingsPage() {
                     id="email"
                     type="email"
                     value={userEmail}
-                    onChange={(e) => setUserEmail(e.target.value)}
                     className="w-full px-4 py-3 border border-[#E0E0E0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7EC8E3] focus:border-transparent transition-all bg-[#F9F9F9]"
                     placeholder="your@email.com"
                     disabled
@@ -402,8 +505,24 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
-                <button className="px-6 py-3 bg-[#4A4A4A] text-white font-semibold rounded-xl hover:bg-black transition-all cursor-pointer">
-                  Save Changes
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={profileSaving}
+                  className="px-6 py-3 bg-[#4A4A4A] text-white font-semibold rounded-xl hover:bg-black transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {profileSaving ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Saving...
+                    </>
+                  ) : profileSaveSuccess ? (
+                    <>
+                      <Check size={18} />
+                      Saved!
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </button>
               </div>
 
@@ -441,22 +560,23 @@ export default function SettingsPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {themes.map((theme) => {
                 const isSelected = selectedTheme === theme.id;
+                const themeColor = themeColors[theme.id];
                 return (
                   <button
                     key={theme.id}
-                    onClick={() => setSelectedTheme(theme.id)}
+                    onClick={() => handleThemeChange(theme.id)}
                     className={`aspect-square rounded-2xl border-2 p-4 transition-all cursor-pointer relative overflow-hidden ${
                       isSelected
                         ? "border-[#4A4A4A] shadow-lg"
                         : "border-[#F0F0F0] hover:border-[#E0E0E0]"
                     }`}
-                    style={{ backgroundColor: theme.bg }}
+                    style={{ backgroundColor: themeColor.bg }}
                   >
                     {/* Preview elements */}
                     <div className="space-y-2">
                       <div
                         className="h-3 w-3/4 rounded-full"
-                        style={{ backgroundColor: theme.accent }}
+                        style={{ backgroundColor: themeColor.accent }}
                       />
                       <div className="h-2 w-1/2 rounded-full bg-[#E0E0E0]" />
                       <div className="h-2 w-2/3 rounded-full bg-[#E0E0E0]" />

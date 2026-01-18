@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Plus } from "lucide-react";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import { useTheme } from "@/context/ThemeContext";
 
 // Mock data for the mood chart
 const moodData = [
@@ -78,6 +80,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
   const supabase = createClient();
+  const { colors } = useTheme();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -103,7 +106,10 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FFF9F5]">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: colors.bg }}
+      >
         <div className="animate-pulse text-2xl text-[#7A7A7A]">
           Loading your rambles...
         </div>
@@ -126,7 +132,10 @@ export default function DashboardPage() {
     .join(" ");
 
   return (
-    <div className="min-h-screen bg-[#FFF9F5] flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ backgroundColor: colors.bg }}
+    >
       <DashboardNavbar />
 
       {/* Main Content */}
@@ -148,7 +157,7 @@ export default function DashboardPage() {
                   <path
                     d="M0 4 Q 12.5 0, 25 4 T 50 4 T 75 4 T 100 4"
                     fill="none"
-                    stroke="#FFAEBC"
+                    stroke={colors.accent}
                     strokeWidth="3"
                     strokeLinecap="round"
                   />
@@ -160,10 +169,13 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <button className="mt-6 md:mt-0 px-6 py-3 bg-[#4A4A4A] text-white font-semibold rounded-xl hover:bg-black hover:-translate-y-0.5 transition-all flex items-center gap-2 cursor-pointer shadow-lg">
+          <Link
+            href="/session"
+            className="mt-6 md:mt-0 px-6 py-3 bg-[#4A4A4A] text-white font-semibold rounded-xl hover:bg-black hover:-translate-y-0.5 transition-all flex items-center gap-2 cursor-pointer shadow-lg"
+          >
             <Plus size={20} />
             New Session
-          </button>
+          </Link>
         </div>
 
         {/* Insights & Analytics Section */}
@@ -296,7 +308,10 @@ export default function DashboardPage() {
                 className="bg-white rounded-2xl p-5 border border-[#F0F0F0] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer"
               >
                 {/* Mood Icon */}
-                <div className="w-12 h-12 bg-[#FFF9F5] rounded-full flex items-center justify-center text-2xl mb-4">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl mb-4"
+                  style={{ backgroundColor: colors.bg }}
+                >
                   {getMoodIcon(session.mood)}
                 </div>
 
@@ -319,14 +334,17 @@ export default function DashboardPage() {
             ))}
 
             {/* Empty State Card */}
-            <div className="bg-white rounded-2xl p-5 border-2 border-dashed border-[#E0E0E0] flex flex-col items-center justify-center min-h-[220px] hover:border-[#7EC8E3] transition-colors cursor-pointer group">
+            <Link
+              href="/session"
+              className="bg-white rounded-2xl p-5 border-2 border-dashed border-[#E0E0E0] flex flex-col items-center justify-center min-h-[220px] hover:border-[#7EC8E3] transition-colors cursor-pointer group"
+            >
               <div className="w-12 h-12 bg-[#F5F5F5] rounded-full flex items-center justify-center text-[#7A7A7A] group-hover:bg-[#7EC8E3] group-hover:text-white transition-colors">
                 <Plus size={24} />
               </div>
               <p className="mt-3 text-sm text-[#7A7A7A] font-medium">
                 Start a new session
               </p>
-            </div>
+            </Link>
           </div>
         </div>
       </main>

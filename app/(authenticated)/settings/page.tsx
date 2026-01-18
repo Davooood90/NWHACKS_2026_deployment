@@ -58,7 +58,11 @@ const themes: { id: ThemeType; name: string }[] = [
 export default function SettingsPage() {
   const router = useRouter();
   const supabase = createClient();
-  const { theme: selectedTheme, setTheme: setSelectedTheme, colors } = useTheme();
+  const {
+    theme: selectedTheme,
+    setTheme: setSelectedTheme,
+    colors,
+  } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -129,7 +133,7 @@ export default function SettingsPage() {
         setValidationDepth(preferences.ai_style as ValidationDepthType);
         setActionStyle(preferences.ai_action as ActionStyleType);
         setSelectedTheme(
-          (preferences.background_colour as ThemeType) || "classic"
+          (preferences.background_colour as ThemeType) || "classic",
         );
       }
 
@@ -146,7 +150,7 @@ export default function SettingsPage() {
       newPersonality: PersonalityType,
       newStyle: ValidationDepthType,
       newAction: ActionStyleType,
-      newTheme: ThemeType
+      newTheme: ThemeType,
     ) => {
       if (!userId) return;
 
@@ -164,7 +168,7 @@ export default function SettingsPage() {
         },
         {
           onConflict: "user_id",
-        }
+        },
       );
 
       setSaving(false);
@@ -174,13 +178,18 @@ export default function SettingsPage() {
         setTimeout(() => setSaveSuccess(false), 2000);
       }
     },
-    [userId, supabase]
+    [userId, supabase],
   );
 
   // Handle personality change
   const handlePersonalityChange = (newPersonality: PersonalityType) => {
     setPersonality(newPersonality);
-    savePreferences(newPersonality, validationDepth, actionStyle, selectedTheme);
+    savePreferences(
+      newPersonality,
+      validationDepth,
+      actionStyle,
+      selectedTheme,
+    );
   };
 
   // Handle validation depth change
@@ -540,7 +549,7 @@ export default function SettingsPage() {
                 <div className="w-16 h-16 bg-[#FFF9F5] rounded-2xl flex items-center justify-center">
                   <Image
                     src="/icon.svg"
-                    alt="Ramble"
+                    alt="rambl"
                     width={40}
                     height={40}
                     className="w-10 h-10"
@@ -550,7 +559,10 @@ export default function SettingsPage() {
                   <p className="text-sm text-[#7A7A7A] mb-1">AI Summary</p>
                   <p className="text-lg text-[#4A4A4A]">
                     I&apos;ll approach our conversations as{" "}
-                    <span className="font-bold" style={{ color: colors.accent }}>
+                    <span
+                      className="font-bold"
+                      style={{ color: colors.accent }}
+                    >
                       {getPersonalityText()}
                     </span>
                     , with{" "}

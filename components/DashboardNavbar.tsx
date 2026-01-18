@@ -43,7 +43,6 @@ export default function DashboardNavbar() {
     router.push("/login");
   };
 
-
   return (
     <nav className="bg-white border-b border-[#F0F0F0] px-6 py-4 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -51,12 +50,12 @@ export default function DashboardNavbar() {
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image
             src="/icon.svg"
-            alt="Ramble logo"
+            alt="rambl logo"
             width={32}
             height={32}
             className="w-8 h-8"
           />
-          <span className="text-2xl font-bold text-[#4A4A4A]">Ramble</span>
+          <span className="text-2xl font-bold text-[#4A4A4A]">rambl</span>
         </Link>
 
         {/* Right Actions */}
@@ -73,10 +72,7 @@ export default function DashboardNavbar() {
             className="hover:ring-2 hover:ring-[#7EC8E3] hover:ring-offset-2 transition-all cursor-pointer rounded-full"
             title="Settings"
           >
-            <UserAvatar
-              avatarUrl={avatarUrl}
-              size="sm"
-            />
+            <UserAvatar avatarUrl={avatarUrl} size="sm" />
           </Link>
         </div>
       </div>

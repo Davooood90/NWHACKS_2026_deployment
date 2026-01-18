@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Home, ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/context/ThemeContext";
+import { createClient } from "@/lib/supabase/client";
 import { Message } from "./DialoguePhase";
 
 interface SessionOverviewProps {
@@ -24,14 +25,29 @@ export default function SessionOverview({
 }: SessionOverviewProps) {
   const { colors } = useTheme();
   const router = useRouter();
+  const supabase = createClient();
   const [summary, setSummary] = useState("");
   const [keywords, setKeywords] = useState<WordData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const sessionSavedRef = useRef(false);
 
   // Extract keywords and generate summary from messages
   useEffect(() => {
     const generateOverview = async () => {
+      if (sessionSavedRef.current) return;
+      sessionSavedRef.current = true;
+
       setIsLoading(true);
+
+      // Get user session
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        setIsLoading(false);
+        return;
+      }
 
       // Combine all user messages for analysis
       const userContent = messages
@@ -42,139 +58,23 @@ export default function SessionOverview({
       // Generate keywords (simple word frequency approach)
       const words = userContent.toLowerCase().split(/\s+/);
       const stopWords = new Set([
-        "i",
-        "me",
-        "my",
-        "myself",
-        "we",
-        "our",
-        "ours",
-        "you",
-        "your",
-        "he",
-        "she",
-        "it",
-        "they",
-        "what",
-        "which",
-        "who",
-        "this",
-        "that",
-        "these",
-        "those",
-        "am",
-        "is",
-        "are",
-        "was",
-        "were",
-        "be",
-        "been",
-        "being",
-        "have",
-        "has",
-        "had",
-        "do",
-        "does",
-        "did",
-        "will",
-        "would",
-        "could",
-        "should",
-        "may",
-        "might",
-        "must",
-        "shall",
-        "can",
-        "need",
-        "dare",
-        "ought",
-        "used",
-        "a",
-        "an",
-        "the",
-        "and",
-        "but",
-        "if",
-        "or",
-        "because",
-        "as",
-        "until",
-        "while",
-        "of",
-        "at",
-        "by",
-        "for",
-        "with",
-        "about",
-        "against",
-        "between",
-        "into",
-        "through",
-        "during",
-        "before",
-        "after",
-        "above",
-        "below",
-        "to",
-        "from",
-        "up",
-        "down",
-        "in",
-        "out",
-        "on",
-        "off",
-        "over",
-        "under",
-        "again",
-        "further",
-        "then",
-        "once",
-        "here",
-        "there",
-        "when",
-        "where",
-        "why",
-        "how",
-        "all",
-        "each",
-        "few",
-        "more",
-        "most",
-        "other",
-        "some",
-        "such",
-        "no",
-        "nor",
-        "not",
-        "only",
-        "own",
-        "same",
-        "so",
-        "than",
-        "too",
-        "very",
-        "just",
-        "don't",
-        "dont",
-        "im",
-        "i'm",
-        "its",
-        "it's",
-        "really",
-        "like",
-        "just",
-        "get",
-        "got",
-        "going",
-        "go",
-        "know",
-        "think",
-        "want",
-        "feel",
-        "feeling",
-        "thing",
-        "things",
-        "lot",
+        "i", "me", "my", "myself", "we", "our", "ours", "you", "your",
+        "he", "she", "it", "they", "what", "which", "who", "this", "that",
+        "these", "those", "am", "is", "are", "was", "were", "be", "been",
+        "being", "have", "has", "had", "do", "does", "did", "will", "would",
+        "could", "should", "may", "might", "must", "shall", "can", "need",
+        "dare", "ought", "used", "a", "an", "the", "and", "but", "if", "or",
+        "because", "as", "until", "while", "of", "at", "by", "for", "with",
+        "about", "against", "between", "into", "through", "during", "before",
+        "after", "above", "below", "to", "from", "up", "down", "in", "out",
+        "on", "off", "over", "under", "again", "further", "then", "once",
+        "here", "there", "when", "where", "why", "how", "all", "each", "few",
+        "more", "most", "other", "some", "such", "no", "nor", "not", "only",
+        "own", "same", "so", "than", "too", "very", "just", "don't", "dont",
+        "im", "i'm", "its", "it's", "really", "like", "just", "get", "got",
+        "going", "go", "know", "think", "want", "feel", "feeling", "thing",
+        "things", "lot", "much", "also", "even", "still", "already", "always",
+        "never", "sometimes", "often", "usually", "maybe", "probably",
       ]);
 
       const wordCounts: Record<string, number> = {};
@@ -190,7 +90,6 @@ export default function SessionOverview({
         .slice(0, 12);
 
       const maxCount = sortedWords[0]?.[1] || 1;
-      // Use darker, more vibrant colors for better readability
       const colorPalette = [
         { bg: `${colors.accentLight}50`, text: colors.accentDark },
         { bg: "#7EC8E340", text: "#3A9BC5" },
@@ -209,9 +108,13 @@ export default function SessionOverview({
 
       setKeywords(keywordData);
 
-      // Generate AI summary
+      // Generate AI summary and title
+      let generatedSummary = "";
+      let generatedTitle = "";
+
       try {
-        const response = await fetch("/api/chat", {
+        // Get summary
+        const summaryResponse = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -221,25 +124,118 @@ export default function SessionOverview({
           }),
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setSummary(data.text);
+        if (summaryResponse.ok) {
+          const data = await summaryResponse.json();
+          generatedSummary = data.text;
         } else {
-          setSummary(
-            "You took time to reflect and share your thoughts today. That takes courage. Remember, every conversation is a step toward understanding yourself better."
-          );
+          generatedSummary =
+            "You took time to reflect and share your thoughts today. That takes courage.";
+        }
+
+        // Get title
+        const titleResponse = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            presetId: "soothing",
+            userMessage: `Generate a short 2-4 word title for this conversation. Just the title, nothing else. Here's what they said: "${userContent}"`,
+            history: [],
+          }),
+        });
+
+        if (titleResponse.ok) {
+          const data = await titleResponse.json();
+          generatedTitle = data.text.replace(/['"]/g, "").trim();
+        } else {
+          generatedTitle = "Session Reflection";
         }
       } catch {
-        setSummary(
-          "You took time to reflect and share your thoughts today. That takes courage. Remember, every conversation is a step toward understanding yourself better."
-        );
+        generatedSummary =
+          "You took time to reflect and share your thoughts today. That takes courage.";
+        generatedTitle = "Session Reflection";
+      }
+
+      setSummary(generatedSummary);
+
+      // Calculate intensity score (0-100 based on message length and frequency)
+      const totalWords = userContent.split(/\s+/).length;
+      const intensityScore = Math.min(100, Math.round((totalWords / 50) * 100));
+
+      // Extract top keywords as plain strings for database
+      const keywordStrings = sortedWords.slice(0, 6).map(([text]) =>
+        text.charAt(0).toUpperCase() + text.slice(1)
+      );
+
+      // Save session to database
+      try {
+        const { data: conversationData, error: conversationError } = await supabase
+          .from("conversations")
+          .insert({
+            user_id: session.user.id,
+            title: generatedTitle,
+            summary: generatedSummary,
+            words: keywordStrings,
+            intensity_score: intensityScore,
+          })
+          .select()
+          .single();
+
+        if (conversationError) {
+          console.error("Error saving conversation:", conversationError);
+        } else if (conversationData) {
+          // Save/update themes
+          for (const keyword of keywordStrings.slice(0, 4)) {
+            // Check if theme exists for this user
+            const { data: existingTheme } = await supabase
+              .from("themes")
+              .select("id, count")
+              .eq("user_id", session.user.id)
+              .eq("label", keyword)
+              .single();
+
+            if (existingTheme) {
+              // Update count
+              await supabase
+                .from("themes")
+                .update({ count: existingTheme.count + 1 })
+                .eq("id", existingTheme.id);
+
+              // Link to conversation
+              await supabase.from("conversations_to_theme").insert({
+                conversation_id: conversationData.id,
+                theme_id: existingTheme.id,
+              });
+            } else {
+              // Create new theme
+              const { data: newTheme } = await supabase
+                .from("themes")
+                .insert({
+                  user_id: session.user.id,
+                  label: keyword,
+                  count: 1,
+                })
+                .select()
+                .single();
+
+              if (newTheme) {
+                // Link to conversation
+                await supabase.from("conversations_to_theme").insert({
+                  conversation_id: conversationData.id,
+                  theme_id: newTheme.id,
+                });
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error saving session:", error);
       }
 
       setIsLoading(false);
     };
 
     generateOverview();
-  }, [messages, colors.accent]);
+  }, [messages, colors.accentDark, colors.accentLight, supabase]);
 
   const handleReturnHome = () => {
     router.push("/dashboard");

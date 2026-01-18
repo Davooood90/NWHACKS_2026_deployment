@@ -175,7 +175,7 @@ export default function SessionPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="relative">
+      <main className="relative py-8">
         {/* Background decorative elements */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           <div

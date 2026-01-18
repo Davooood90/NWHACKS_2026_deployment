@@ -135,7 +135,7 @@ export default function InitialInput({ onSubmit }: InitialInputProps) {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Type here... Let everything out. What happened? How are you feeling? Don't hold back."
-              className="w-full min-h-[200px] resize-none bg-transparent text-[#4A4A4A] placeholder-[#B0B0B0] focus:outline-none text-lg leading-relaxed"
+              className="w-full min-h-[200px] py-2 px-3 resize-none bg-transparent text-[#4A4A4A] placeholder-[#B0B0B0] focus:outline-none text-lg leading-relaxed"
             />
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#F0F0F0]">
               <span className="text-sm text-[#7A7A7A]">

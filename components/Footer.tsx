@@ -1,5 +1,9 @@
-import Image from "next/image";
+"use client";
+
+import { useTheme } from "@/context/ThemeContext";
+
 const Footer = () => {
+  const { colors } = useTheme();
   const navLinks = [
     { name: "Home", href: "/#home" },
     { name: "Motivation", href: "/#motivation" },
@@ -49,7 +53,10 @@ const Footer = () => {
   return (
     <footer className="bg-[#F5F5F5] border-t border-[#E5E5E5] relative overflow-hidden">
       {/* Decorative background blob (optional subtle touch) */}
-      <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-[#7EC8E3]/5 rounded-full blur-3xl pointer-events-none" />
+      <div
+        className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 rounded-full blur-3xl pointer-events-none"
+        style={{ backgroundColor: `${colors.accent}10` }}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-8">
@@ -60,13 +67,44 @@ const Footer = () => {
                 rambl
               </span>
               {/* Mini mascot */}
-              <Image
-                src="/icon.svg"
-                alt="rambl logo"
-                width={32}
-                height={32}
-                className="w-8 h-8 object-contain"
-              />
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 52 52"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-8 h-8"
+              >
+                <rect width="52" height="52" rx="7" fill={colors.accent} />
+                <path
+                  d="M0 36.7951C5.77778 34.2766 11.5556 34.2766 17.3333 36.7951C23.1111 39.3137 28.8889 39.3137 34.6667 36.7951C40.4444 34.2766 46.2222 34.2766 52 36.7951V46.8692C52 49.3877 49.1111 51.9063 46.2222 51.9063H5.77778C2.88889 51.9063 0 49.3877 0 46.8692V36.7951Z"
+                  fill={colors.accentLight}
+                />
+                <path
+                  d="M0 27.9517C5.77778 25.2244 11.5556 25.2244 17.3333 27.9517C23.1111 30.679 28.8889 30.679 34.6667 27.9517C40.4444 25.2244 46.2222 25.2244 52 27.9517V38.8608C46.2222 36.1335 40.4444 36.1335 34.6667 38.8608C28.8889 41.5881 23.1111 41.5881 17.3333 38.8608C11.5556 36.1335 5.77778 36.1335 0 38.8608V27.9517Z"
+                  fill={`${colors.accentLight}80`}
+                />
+                <ellipse
+                  cx="12.3223"
+                  cy="12.849"
+                  rx="3.32228"
+                  ry="3.84899"
+                  fill={colors.accentDark}
+                />
+                <ellipse
+                  cx="39.3223"
+                  cy="12.849"
+                  rx="3.32228"
+                  ry="3.84899"
+                  fill={colors.accentDark}
+                />
+                <path
+                  d="M19 22C19 22 25.5 29.5 33 22"
+                  stroke={colors.accentDark}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
             </div>
             <p className="text-[#7A7A7A] leading-relaxed text-sm">
               A safe space for your thoughts. Ramble freely, without judgment.
@@ -83,9 +121,20 @@ const Footer = () => {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-[#7A7A7A] hover:text-[#7EC8E3] transition-colors font-medium text-sm flex items-center gap-2 group"
+                    className="text-[#7A7A7A] transition-colors font-medium text-sm flex items-center gap-2 group"
+                    style={{ "--hover-color": colors.accent } as React.CSSProperties}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = colors.accent;
+                      const dot = e.currentTarget.querySelector("span");
+                      if (dot) (dot as HTMLElement).style.backgroundColor = colors.accent;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "#7A7A7A";
+                      const dot = e.currentTarget.querySelector("span");
+                      if (dot) (dot as HTMLElement).style.backgroundColor = "#E5E5E5";
+                    }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#E5E5E5] group-hover:bg-[#7EC8E3] transition-colors" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#E5E5E5] transition-colors" />
                     {link.name}
                   </a>
                 </li>
@@ -107,7 +156,11 @@ const Footer = () => {
                     rel="noopener noreferrer"
                     className="group block"
                   >
-                    <span className="text-[#4A4A4A] font-semibold text-sm group-hover:text-[#7EC8E3] transition-colors flex items-center gap-1">
+                    <span
+                      className="text-[#4A4A4A] font-semibold text-sm transition-colors flex items-center gap-1"
+                      onMouseEnter={(e) => (e.currentTarget.style.color = colors.accent)}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = "#4A4A4A")}
+                    >
                       {resource.name}
                       <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs">
                         ↗
@@ -136,7 +189,11 @@ const Footer = () => {
                     rel="noopener noreferrer"
                     className="group block"
                   >
-                    <span className="text-[#4A4A4A] font-semibold text-sm group-hover:text-[#7EC8E3] transition-colors flex items-center gap-1">
+                    <span
+                      className="text-[#4A4A4A] font-semibold text-sm transition-colors flex items-center gap-1"
+                      onMouseEnter={(e) => (e.currentTarget.style.color = colors.accent)}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = "#4A4A4A")}
+                    >
                       {resource.name}
                       <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs">
                         ↗
@@ -153,7 +210,10 @@ const Footer = () => {
         </div>
 
         {/* Disclaimer Card */}
-        <div className="mt-10 sm:mt-12 p-4 bg-white/50 backdrop-blur-sm rounded-[16px] border border-[#7EC8E3]/20 shadow-sm">
+        <div
+          className="mt-10 sm:mt-12 p-4 bg-white/50 backdrop-blur-sm rounded-[16px] shadow-sm"
+          style={{ border: `1px solid ${colors.accent}30` }}
+        >
           <div className="flex flex-col items-center justify-center gap-3 text-center">
             <p className="text-sm text-[#5A5A5A]">
               <span className="font-bold text-[#4A4A4A]">Important:</span> Rambl
@@ -172,8 +232,8 @@ const Footer = () => {
             <div className="flex flex-wrap items-center gap-1.5">
               <span>Made with</span>
               <svg
-                className="w-3 h-3 text-[#FFAEBC]"
-                fill="currentColor"
+                className="w-3 h-3"
+                fill={colors.accentLight}
                 viewBox="0 0 24 24"
               >
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
@@ -184,7 +244,10 @@ const Footer = () => {
             {/* Right Side Element */}
             <div className="text-center sm:text-right">
               © 2026 Rambl. Crafted for{" "}
-              <span className="font-medium text-[#7EC8E3]">nwHacks</span>.
+              <span className="font-medium" style={{ color: colors.accent }}>
+                nwHacks
+              </span>
+              .
             </div>
           </div>
         </div>

@@ -169,18 +169,40 @@ export default function DashboardPage() {
           { day: "Sun", value: 100 },
         ];
 
-  const maxValue = Math.max(...chartMoodData.map((d) => d.value), 1);
+  const rawMax = Math.max(...chartMoodData.map((d) => d.value));
+  const maxValue = rawMax < 4 ? 4 : rawMax;
+
+  // 2. Determine Y-Axis Ticks (Grid lines)
+  // If max is small (e.g. 4), show 0, 1, 2, 3, 4. If large, show 5 steps.
+  let yTicks: number[] = [];
+  if (maxValue <= 5) {
+    yTicks = Array.from({ length: maxValue + 1 }, (_, i) => i);
+  } else {
+    // Create 5 roughly even steps
+    const step = Math.ceil(maxValue / 4);
+    yTicks = [0, step, step * 2, step * 3, step * 4];
+    // Update max value to match the top tick so the line doesn't go off chart
+    // (This is optional, but makes the top line the true ceiling)
+  }
+  const displayMax = yTicks[yTicks.length - 1];
+
+  // 3. Dimensions
   const chartWidth = 280;
   const chartHeight = 180;
-  const paddingX = 20;
-  const paddingY = 15;
-  const labelHeight = 25;
-  const graphWidth = chartWidth - paddingX * 2;
+  const paddingLeft = 35; // Increased for Y-axis labels
+  const paddingRight = 10;
+  const paddingY = 20; // Top/Bottom padding
+  const labelHeight = 20;
+
+  const graphWidth = chartWidth - paddingLeft - paddingRight;
   const graphHeight = chartHeight - paddingY * 2 - labelHeight;
+
+  // 4. Map Points
   const points = chartMoodData.map((d, i) => ({
-    x: paddingX + (i / (chartMoodData.length - 1)) * graphWidth,
-    y: paddingY + graphHeight - (d.value / maxValue) * graphHeight,
+    x: paddingLeft + (i / (chartMoodData.length - 1)) * graphWidth,
+    y: paddingY + graphHeight - (d.value / displayMax) * graphHeight,
   }));
+
   const linePath = points
     .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
     .join(" ");
@@ -261,12 +283,43 @@ export default function DashboardPage() {
                 </linearGradient>
               </defs>
 
+              {/* Y-Axis Grid Lines & Labels */}
+              {yTicks.map((tick) => {
+                const yPos =
+                  paddingY + graphHeight - (tick / displayMax) * graphHeight;
+                return (
+                  <g key={tick}>
+                    {/* Horizontal Grid Line */}
+                    <line
+                      x1={paddingLeft}
+                      y1={yPos}
+                      x2={chartWidth - paddingRight}
+                      y2={yPos}
+                      stroke="#F0F0F0"
+                      strokeWidth="1"
+                      strokeDasharray={tick === 0 ? "" : "4 4"} // Dashed for non-zero
+                    />
+                    {/* Y-Axis Label */}
+                    <text
+                      x={paddingLeft - 10}
+                      y={yPos + 4} // Optical vertical alignment
+                      textAnchor="end"
+                      className="text-[12px] fill-[#A0A0A0]"
+                    >
+                      {tick}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* The Area Fill (Gradient) */}
               <path
-                d={`${linePath} L ${paddingX + graphWidth} ${paddingY + graphHeight} L ${paddingX} ${paddingY + graphHeight} Z`}
+                d={`${linePath} L ${chartWidth - paddingRight} ${paddingY + graphHeight} L ${paddingLeft} ${paddingY + graphHeight} Z`}
                 fill={`url(#gradient-${colors.accent.replace("#", "")})`}
                 opacity="0.3"
               />
 
+              {/* The Line Stroke */}
               <path
                 d={linePath}
                 fill="none"
@@ -276,6 +329,7 @@ export default function DashboardPage() {
                 strokeLinejoin="round"
               />
 
+              {/* The Dots */}
               {points.map((p, i) => (
                 <circle
                   key={i}
@@ -288,13 +342,16 @@ export default function DashboardPage() {
                 />
               ))}
 
+              {/* X-Axis Labels */}
               {chartMoodData.map((d, i) => (
                 <text
                   key={d.day}
-                  x={paddingX + (i / (chartMoodData.length - 1)) * graphWidth}
-                  y={chartHeight - 10}
+                  x={
+                    paddingLeft + (i / (chartMoodData.length - 1)) * graphWidth
+                  }
+                  y={chartHeight - 5}
                   textAnchor="middle"
-                  className="text-[14px] fill-[#5A5A5A]"
+                  className="text-[12px] fill-[#7A7A7A]"
                 >
                   {d.day}
                 </text>

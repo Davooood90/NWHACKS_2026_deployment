@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+
 # rambl 🫧
 
 ### _don’t keep in your crash outs_
@@ -111,13 +112,20 @@ rambl is inspired by the “Dumb Ways to Die” vibe:
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
+CREATE TABLE public.avatar_photos (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  avatar_url text NOT NULL,
+  user_id uuid NOT NULL UNIQUE,
+  CONSTRAINT avatar_photos_pkey PRIMARY KEY (id),
+  CONSTRAINT avatar_photos_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
 CREATE TABLE public.conversations (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   title text,
   summary text,
   words ARRAY,
-  intensity_score double precision,
   user_id uuid,
   CONSTRAINT conversations_pkey PRIMARY KEY (id),
   CONSTRAINT conversations_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
@@ -152,9 +160,13 @@ CREATE TABLE public.themes (
   CONSTRAINT themes_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 ```
+
 =======
+
 # NWHACKS_2026
+
 David, Daniel, Cindy, Sean
 
 the goat team
->>>>>>> 72754dbd8fa8b47e375aa6aba369caaffd80f85c
+
+> > > > > > > 72754dbd8fa8b47e375aa6aba369caaffd80f85c

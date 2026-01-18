@@ -462,7 +462,7 @@ export default function DashboardPage() {
                     console.log("Delete clicked for ID:", conversation.id); // Verify click works
                     handleDelete(conversation.id);
                   }}
-                  className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all z-20 opacity-0 group-hover:opacity-100"
+                  className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all z-20"
                   title="Delete Session"
                 >
                   <Trash2 size={18} />

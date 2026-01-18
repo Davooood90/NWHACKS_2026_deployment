@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Check, ArrowRight, Smile, Mic, MicOff, Volume2 } from "lucide-react";
+import {
+  Send,
+  Check,
+  ArrowRight,
+  Smile,
+  Mic,
+  MicOff,
+  Volume2,
+} from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import UserAvatar from "@/components/UserAvatar";
 import { createClient } from "@/lib/supabase/client";
@@ -78,18 +86,22 @@ export default function DialoguePhase({
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
       const { data: avatarData } = await supabase
         .from("avatar_photos")
         .select("avatar_url")
         .eq("user_id", user?.id)
         .single();
-      setUserAvatarUrl(avatarData?.avatar_url || user?.user_metadata?.avatar_url || null);
+      setUserAvatarUrl(
+        avatarData?.avatar_url || user?.user_metadata?.avatar_url || null,
+      );
     };
     getUser();
   }, [supabase, user]);
-    const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Check for Web Speech API support - lazy initialization
@@ -121,7 +133,8 @@ export default function DialoguePhase({
       const scrollHeight = inputRef.current.scrollHeight;
       const maxHeight = 120;
       inputRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
-      inputRef.current.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
+      inputRef.current.style.overflowY =
+        scrollHeight > maxHeight ? "auto" : "hidden";
     }
   }, [inputValue]);
 
@@ -132,7 +145,7 @@ export default function DialoguePhase({
 
       try {
         setIsSpeaking(true);
-        
+
         // Get the voice ID from the preset based on AI personality
         const preset = getPresetById(presetId);
         const voiceId = preset?.voiceId || "JBFqnCBsd6RMkjVDRZzb";
@@ -171,7 +184,7 @@ export default function DialoguePhase({
         setIsSpeaking(false);
       }
     },
-    [currentMode, presetId]
+    [currentMode, presetId],
   );
 
   // Speech recognition for voice input
@@ -288,7 +301,7 @@ export default function DialoguePhase({
         setIsLoading(false);
       }
     },
-    [presetId, currentMode, speakText]
+    [presetId, currentMode, speakText],
   );
 
   // Send initial message on mount
@@ -343,7 +356,10 @@ export default function DialoguePhase({
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)] max-w-3xl mx-auto">
       {/* Messages Area */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto px-4 py-6 space-y-6"
+      >
         {messages.map((message) => (
           <div
             key={message.id}
@@ -365,7 +381,13 @@ export default function DialoguePhase({
                   xmlns="http://www.w3.org/2000/svg"
                   className="w-6 h-6"
                 >
-                  <rect width="52" height="52" rx="7" fill="white" fillOpacity="0.9" />
+                  <rect
+                    width="52"
+                    height="52"
+                    rx="7"
+                    fill="white"
+                    fillOpacity="0.9"
+                  />
                   <path
                     d="M0 36.7951C5.77778 34.2766 11.5556 34.2766 17.3333 36.7951C23.1111 39.3137 28.8889 39.3137 34.6667 36.7951C40.4444 34.2766 46.2222 34.2766 52 36.7951V46.8692C52 49.3877 49.1111 51.9063 46.2222 51.9063H5.77778C2.88889 51.9063 0 49.3877 0 46.8692V36.7951Z"
                     fill={colors.accentLight}
@@ -374,8 +396,20 @@ export default function DialoguePhase({
                     d="M0 27.9517C5.77778 25.2244 11.5556 25.2244 17.3333 27.9517C23.1111 30.679 28.8889 30.679 34.6667 27.9517C40.4444 25.2244 46.2222 25.2244 52 27.9517V38.8608C46.2222 36.1335 40.4444 36.1335 34.6667 38.8608C28.8889 41.5881 23.1111 41.5881 17.3333 38.8608C11.5556 36.1335 5.77778 36.1335 0 38.8608V27.9517Z"
                     fill={`${colors.accentLight}80`}
                   />
-                  <ellipse cx="12.3223" cy="12.849" rx="3.32228" ry="3.84899" fill={colors.accentDark} />
-                  <ellipse cx="39.3223" cy="12.849" rx="3.32228" ry="3.84899" fill={colors.accentDark} />
+                  <ellipse
+                    cx="12.3223"
+                    cy="12.849"
+                    rx="3.32228"
+                    ry="3.84899"
+                    fill={colors.accentDark}
+                  />
+                  <ellipse
+                    cx="39.3223"
+                    cy="12.849"
+                    rx="3.32228"
+                    ry="3.84899"
+                    fill={colors.accentDark}
+                  />
                   <path
                     d="M19 22C19 22 25.5 29.5 33 22"
                     stroke={colors.accentDark}
@@ -445,9 +479,9 @@ export default function DialoguePhase({
                     fallbackInitial={user.user_metadata?.full_name}
                     size="sm"
                   />
-                ) : 
+                ) : (
                   <Smile size={20} className="text-white" />
-                }
+                )}
               </div>
             )}
           </div>
@@ -468,7 +502,13 @@ export default function DialoguePhase({
                 xmlns="http://www.w3.org/2000/svg"
                 className="w-6 h-6"
               >
-                <rect width="52" height="52" rx="7" fill="white" fillOpacity="0.9" />
+                <rect
+                  width="52"
+                  height="52"
+                  rx="7"
+                  fill="white"
+                  fillOpacity="0.9"
+                />
                 <path
                   d="M0 36.7951C5.77778 34.2766 11.5556 34.2766 17.3333 36.7951C23.1111 39.3137 28.8889 39.3137 34.6667 36.7951C40.4444 34.2766 46.2222 34.2766 52 36.7951V46.8692C52 49.3877 49.1111 51.9063 46.2222 51.9063H5.77778C2.88889 51.9063 0 49.3877 0 46.8692V36.7951Z"
                   fill={colors.accentLight}
@@ -477,8 +517,20 @@ export default function DialoguePhase({
                   d="M0 27.9517C5.77778 25.2244 11.5556 25.2244 17.3333 27.9517C23.1111 30.679 28.8889 30.679 34.6667 27.9517C40.4444 25.2244 46.2222 25.2244 52 27.9517V38.8608C46.2222 36.1335 40.4444 36.1335 34.6667 38.8608C28.8889 41.5881 23.1111 41.5881 17.3333 38.8608C11.5556 36.1335 5.77778 36.1335 0 38.8608V27.9517Z"
                   fill={`${colors.accentLight}80`}
                 />
-                <ellipse cx="12.3223" cy="12.849" rx="3.32228" ry="3.84899" fill={colors.accentDark} />
-                <ellipse cx="39.3223" cy="12.849" rx="3.32228" ry="3.84899" fill={colors.accentDark} />
+                <ellipse
+                  cx="12.3223"
+                  cy="12.849"
+                  rx="3.32228"
+                  ry="3.84899"
+                  fill={colors.accentDark}
+                />
+                <ellipse
+                  cx="39.3223"
+                  cy="12.849"
+                  rx="3.32228"
+                  ry="3.84899"
+                  fill={colors.accentDark}
+                />
                 <path
                   d="M19 22C19 22 25.5 29.5 33 22"
                   stroke={colors.accentDark}
@@ -580,7 +632,7 @@ export default function DialoguePhase({
 
           {/* Text input with optional mic button */}
           <div className="p-4 pb-3">
-            <div className="flex items-end gap-3">
+            <div className="flex items-center gap-3">
               {/* Voice recording button */}
               {currentMode === "voice" && speechSupported && (
                 <button
@@ -599,6 +651,7 @@ export default function DialoguePhase({
                 </button>
               )}
 
+              {/* Textarea container */}
               <div className="flex-1 relative">
                 <textarea
                   ref={inputRef}
@@ -629,6 +682,7 @@ export default function DialoguePhase({
                 )}
               </div>
 
+              {/* Send button */}
               <button
                 onClick={handleSend}
                 disabled={!inputValue.trim() || isLoading || isSpeaking}

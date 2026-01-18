@@ -1,11 +1,11 @@
 import Image from "next/image";
 const Footer = () => {
   const navLinks = [
-    { name: "Home", href: "#home" },
-    { name: "Motivation", href: "#motivation" },
-    { name: "Features", href: "#features" },
-    { name: "Team", href: "#team" },
-    { name: "FAQ", href: "#faq" },
+    { name: "Home", href: "/#home" },
+    { name: "Motivation", href: "/#motivation" },
+    { name: "Features", href: "/#features" },
+    { name: "Team", href: "/#team" },
+    { name: "FAQ", href: "/#faq" },
   ];
 
   // National (Canada) Resources

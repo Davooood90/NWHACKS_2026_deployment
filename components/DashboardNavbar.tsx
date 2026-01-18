@@ -5,14 +5,32 @@ import { createClient } from "@/lib/supabase/client";
 import { LogOut, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 export default function DashboardNavbar() {
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const router = useRouter();
   const supabase = createClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase.auth]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push("/login");
+  };
+
+  
+  const getAvatarUrl = () => {
+    return user?.user_metadata?.avatar_url || "";
   };
 
   return (
@@ -44,7 +62,17 @@ export default function DashboardNavbar() {
             className="w-10 h-10 rounded-full bg-[#7EC8E3] flex items-center justify-center hover:ring-2 hover:ring-[#7EC8E3] hover:ring-offset-2 transition-all cursor-pointer"
             title="Settings"
           >
-            <User size={18} className="text-white" />
+            {getAvatarUrl() ? (
+              <Image
+                src={getAvatarUrl()}
+                alt="User avatar"
+                width={10}
+                height={10}
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              <User size={18} className="text-white" />
+            )}
           </Link>
         </div>
       </div>

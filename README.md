@@ -1,6 +1,4 @@
-<<<<<<< HEAD
-
-# rambl 🫧
+# rambl
 
 ### _don’t keep in your crash outs_
 
@@ -161,12 +159,3 @@ CREATE TABLE public.themes (
 );
 ```
 
-=======
-
-# NWHACKS_2026
-
-David, Daniel, Cindy, Sean
-
-the goat team
-
-> > > > > > > 72754dbd8fa8b47e375aa6aba369caaffd80f85c

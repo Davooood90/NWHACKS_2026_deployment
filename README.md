@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # rambl 🫧
 
 ### _don’t keep in your crash outs_
@@ -151,3 +152,9 @@ CREATE TABLE public.themes (
   CONSTRAINT themes_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 ```
+=======
+# NWHACKS_2026
+David, Daniel, Cindy, Sean
+
+the goat team
+>>>>>>> 72754dbd8fa8b47e375aa6aba369caaffd80f85c

@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Check, ArrowRight, Smile } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
-import Image from "next/image";
 import UserAvatar from "@/components/UserAvatar";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -186,13 +185,32 @@ export default function DialoguePhase({
                 className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm"
                 style={{ backgroundColor: colors.accent }}
               >
-                <Image
-                  src="/icon.svg"
-                  alt="Rambl"
-                  width={24}
-                  height={24}
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 52 52"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                   className="w-6 h-6"
-                />
+                >
+                  <rect width="52" height="52" rx="7" fill="white" fillOpacity="0.9" />
+                  <path
+                    d="M0 36.7951C5.77778 34.2766 11.5556 34.2766 17.3333 36.7951C23.1111 39.3137 28.8889 39.3137 34.6667 36.7951C40.4444 34.2766 46.2222 34.2766 52 36.7951V46.8692C52 49.3877 49.1111 51.9063 46.2222 51.9063H5.77778C2.88889 51.9063 0 49.3877 0 46.8692V36.7951Z"
+                    fill={colors.accentLight}
+                  />
+                  <path
+                    d="M0 27.9517C5.77778 25.2244 11.5556 25.2244 17.3333 27.9517C23.1111 30.679 28.8889 30.679 34.6667 27.9517C40.4444 25.2244 46.2222 25.2244 52 27.9517V38.8608C46.2222 36.1335 40.4444 36.1335 34.6667 38.8608C28.8889 41.5881 23.1111 41.5881 17.3333 38.8608C11.5556 36.1335 5.77778 36.1335 0 38.8608V27.9517Z"
+                    fill={`${colors.accentLight}80`}
+                  />
+                  <ellipse cx="12.3223" cy="12.849" rx="3.32228" ry="3.84899" fill={colors.accentDark} />
+                  <ellipse cx="39.3223" cy="12.849" rx="3.32228" ry="3.84899" fill={colors.accentDark} />
+                  <path
+                    d="M19 22C19 22 25.5 29.5 33 22"
+                    stroke={colors.accentDark}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
               </div>
             )}
 
@@ -270,13 +288,32 @@ export default function DialoguePhase({
               className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm"
               style={{ backgroundColor: colors.accent }}
             >
-              <Image
-                src="/icon.svg"
-                alt="Rambl"
-                width={24}
-                height={24}
-                className="w-6 h-6 brightness-0 invert"
-              />
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 52 52"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-6 h-6"
+              >
+                <rect width="52" height="52" rx="7" fill="white" fillOpacity="0.9" />
+                <path
+                  d="M0 36.7951C5.77778 34.2766 11.5556 34.2766 17.3333 36.7951C23.1111 39.3137 28.8889 39.3137 34.6667 36.7951C40.4444 34.2766 46.2222 34.2766 52 36.7951V46.8692C52 49.3877 49.1111 51.9063 46.2222 51.9063H5.77778C2.88889 51.9063 0 49.3877 0 46.8692V36.7951Z"
+                  fill={colors.accentLight}
+                />
+                <path
+                  d="M0 27.9517C5.77778 25.2244 11.5556 25.2244 17.3333 27.9517C23.1111 30.679 28.8889 30.679 34.6667 27.9517C40.4444 25.2244 46.2222 25.2244 52 27.9517V38.8608C46.2222 36.1335 40.4444 36.1335 34.6667 38.8608C28.8889 41.5881 23.1111 41.5881 17.3333 38.8608C11.5556 36.1335 5.77778 36.1335 0 38.8608V27.9517Z"
+                  fill={`${colors.accentLight}80`}
+                />
+                <ellipse cx="12.3223" cy="12.849" rx="3.32228" ry="3.84899" fill={colors.accentDark} />
+                <ellipse cx="39.3223" cy="12.849" rx="3.32228" ry="3.84899" fill={colors.accentDark} />
+                <path
+                  d="M19 22C19 22 25.5 29.5 33 22"
+                  stroke={colors.accentDark}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
             </div>
             <div>
               <p

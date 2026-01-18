@@ -59,26 +59,7 @@ const MotivationSection = () => {
           <div className="flex justify-center lg:justify-end">
             <div className="relative animate-float-gentle">
               {/* Mascot - Thinking blob */}
-              <div className="w-64 h-64 md:w-80 md:h-80 bg-[#A0E7E5] rounded-blob animate-blob-wobble opacity-90 relative">
-                {/* Face */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {/* Eyes - Looking up/thinking */}
-                  <div className="flex gap-8 md:gap-10 -mt-4">
-                    {/* Left Eye */}
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-[#4A4A4A] rounded-full relative overflow-hidden">
-                      <div className="absolute top-1 right-1 w-3 h-3 bg-white rounded-full opacity-60"></div>
-                    </div>
-                    {/* Right Eye */}
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-[#4A4A4A] rounded-full relative overflow-hidden">
-                      <div className="absolute top-1 right-1 w-3 h-3 bg-white rounded-full opacity-60"></div>
-                    </div>
-                  </div>
-                  {/* Mouth - Small frown/thinking */}
-                  <div className="absolute top-1/2 mt-8">
-                    <div className="w-8 h-1 bg-[#4A4A4A] rounded-full opacity-80"></div>
-                  </div>
-                </div>
-              </div>
+              <div className="w-64 h-64 md:w-80 md:h-80 bg-[#A0E7E5] rounded-blob animate-blob-wobble opacity-90 relative"></div>
             </div>
           </div>
         </div>

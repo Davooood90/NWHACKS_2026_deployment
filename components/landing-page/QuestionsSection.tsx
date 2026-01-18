@@ -73,11 +73,7 @@ const QuestionsSection = () => {
                   onClick={() => toggleFAQ(index)}
                   className="w-full flex justify-between items-center p-6 text-left focus:outline-none"
                 >
-                  <span
-                    className={`text-lg font-bold pr-4 ${
-                      openIndex === index ? "text-[#4A4A4A]" : "text-[#4A4A4A]"
-                    }`}
-                  >
+                  <span className="text-lg font-bold pr-4 text-[#4A4A4A]">
                     {faq.question}
                   </span>
                   <span
@@ -113,29 +109,19 @@ const QuestionsSection = () => {
           </div>
 
           {/* Right Column - Smiling Mascot (40%) */}
-          <div className="lg:col-span-2 hidden lg:flex items-end justify-center relative">
+          <div className="lg:col-span-2 hidden lg:flex items-center justify-center relative min-h-[400px]">
             <div className="relative">
               {/* Happy Mascot */}
               <div className="animate-float-slow">
-                <div className="w-64 h-64 bg-[#FFAEBC] rounded-blob animate-blob-wobble opacity-90 relative">
-                  Image
-                </div>
+                <div className="w-56 h-56 bg-[#FFAEBC] rounded-blob animate-blob-wobble opacity-90 relative"></div>
+              </div>
+
+              {/* Speech bubble */}
+              <div className="absolute -top-12 -right-4 animate-float animation-delay-1000">
+                <div className="absolute bottom-0 left-6 w-3 h-3 bg-white border-r border-b border-[#E5E5E5] rotate-45 -mb-1.5" />
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Contact Support Link */}
-        <div className="text-center mt-12">
-          <p className="text-[#7A7A7A]">
-            Still have questions?{" "}
-            <a
-              href="#"
-              className="text-[#7EC8E3] font-bold hover:text-[#5BA3C0] transition-colors"
-            >
-              Contact our friendly support team
-            </a>
-          </p>
         </div>
       </div>
     </section>

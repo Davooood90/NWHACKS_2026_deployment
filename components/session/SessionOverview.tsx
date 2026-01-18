@@ -20,6 +20,18 @@ interface WordData {
   bgColor?: string;
 }
 
+interface ExtractedTheme {
+  type: "theme" | "emotion" | "entity";
+  value: string;
+}
+
+// Color configurations for different theme types
+const THEME_COLORS = {
+  theme: { bg: "#7EC8E340", text: "#3A9BC5" },      // Blue for general themes
+  emotion: { bg: "#FF8FA330", text: "#E85D75" },    // Pink/Red for emotions
+  entity: { bg: "#4FD18B30", text: "#2FB36E" },     // Green for entities
+};
+
 export default function SessionOverview({
   messages,
   onNewSession,
@@ -29,6 +41,7 @@ export default function SessionOverview({
   const supabase = createClient();
   const [summary, setSummary] = useState("");
   const [keywords, setKeywords] = useState<WordData[]>([]);
+  const [extractedThemes, setExtractedThemes] = useState<ExtractedTheme[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [conversationId, setConversationId] = useState<number | null>(null);
   const sessionSavedRef = useRef(false);
@@ -110,6 +123,33 @@ export default function SessionOverview({
 
       setKeywords(keywordData);
 
+      // Extract AI-powered themes using Gemini API
+      let aiExtractedThemes: ExtractedTheme[] = [];
+      try {
+        const userMessageContents = messages
+          .filter((m) => m.role === "user")
+          .map((m) => m.content);
+
+        const themesResponse = await fetch("/api/themes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userMessages: userMessageContents,
+          }),
+        });
+
+        if (themesResponse.ok) {
+          const themesData = await themesResponse.json();
+          if (themesData.themes && Array.isArray(themesData.themes)) {
+            aiExtractedThemes = themesData.themes.slice(0, 5); // Max 5 themes
+            setExtractedThemes(aiExtractedThemes);
+          }
+        }
+      } catch (themeError) {
+        console.error("Error extracting themes:", themeError);
+        // Fallback: no AI themes extracted
+      }
+
       // Generate AI summary and title
       let generatedSummary = "";
       let generatedTitle = "";
@@ -159,14 +199,14 @@ export default function SessionOverview({
 
       setSummary(generatedSummary);
 
-      // Calculate intensity score (0-100 based on message length and frequency)
-      const totalWords = userContent.split(/\s+/).length;
-      const intensityScore = Math.min(100, Math.round((totalWords / 50) * 100));
-
       // Extract top keywords as plain strings for database
-      const keywordStrings = sortedWords.slice(0, 6).map(([text]) =>
+      // Combine AI-extracted themes with frequency-based keywords
+      const aiThemeStrings = aiExtractedThemes.map((t) => t.value);
+      const frequencyKeywords = sortedWords.slice(0, 6).map(([text]) =>
         text.charAt(0).toUpperCase() + text.slice(1)
       );
+      // Prioritize AI themes, then add frequency keywords (deduped)
+      const keywordStrings = [...new Set([...aiThemeStrings, ...frequencyKeywords])].slice(0, 6);
 
       // Save session to database
       try {
@@ -278,33 +318,46 @@ export default function SessionOverview({
         <p className="text-[#7A7A7A]">Here&apos;s what we explored together</p>
       </div>
 
-      {/* Mood Map / Word Cloud */}
-      <div className="bg-white rounded-3xl shadow-lg p-8 mb-6 border border-[#F0F0F0]">
-        <h2 className="text-lg font-bold text-[#4A4A4A] mb-6 text-center">
-          Your Mood Map
-        </h2>
-        <div className="flex flex-wrap justify-center items-center gap-3 min-h-[150px]">
-          {keywords.length > 0 ? (
-            keywords.map((word, index) => (
-              <span
+      {/* Key Themes Section */}
+      {extractedThemes.length > 0 && (
+        <div className="bg-white rounded-3xl shadow-lg p-8 mb-6 border border-[#F0F0F0]">
+          <h2 className="text-lg font-bold text-[#4A4A4A] mb-4 text-center">
+            Key Themes
+          </h2>
+          <div className="flex flex-wrap justify-center items-center gap-3">
+            {extractedThemes.map((theme, index) => (
+              <div
                 key={index}
-                className="px-4 py-2 rounded-full font-semibold transition-transform hover:scale-105 cursor-default shadow-sm"
+                className="px-4 py-2 rounded-full font-semibold transition-transform hover:scale-105 cursor-default shadow-sm flex items-center gap-2"
                 style={{
-                  backgroundColor: word.bgColor || `${word.color}25`,
-                  color: word.color,
-                  fontSize: `${0.875 + word.weight * 0.5}rem`,
+                  backgroundColor: THEME_COLORS[theme.type].bg,
+                  color: THEME_COLORS[theme.type].text,
                 }}
               >
-                {word.text}
-              </span>
-            ))
-          ) : (
-            <p className="text-[#7A7A7A]">
-              Share more to see your mood patterns
-            </p>
-          )}
+                <span className="text-xs opacity-70 uppercase">
+                  {theme.type === "theme" ? "Theme" : theme.type === "emotion" ? "Emotion" : "Entity"}
+                </span>
+                <span>{theme.value}</span>
+              </div>
+            ))}
+          </div>
+          {/* Legend */}
+          <div className="flex justify-center gap-4 mt-4 text-xs text-[#7A7A7A]">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: THEME_COLORS.theme.bg, border: `1px solid ${THEME_COLORS.theme.text}` }} />
+              <span>General</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: THEME_COLORS.emotion.bg, border: `1px solid ${THEME_COLORS.emotion.text}` }} />
+              <span>Emotion</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: THEME_COLORS.entity.bg, border: `1px solid ${THEME_COLORS.entity.text}` }} />
+              <span>Entity</span>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Summary */}
       <div className="bg-white rounded-3xl shadow-lg p-8 mb-8 border border-[#F0F0F0]">

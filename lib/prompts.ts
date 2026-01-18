@@ -128,3 +128,50 @@ export function getPresetById(id: string): PromptPreset | undefined {
 export function getDefaultPreset(): PromptPreset {
     return presets[0];
 }
+
+// Theme extraction prompt for analyzing conversation themes
+export const THEME_EXTRACTION_PROMPT = `You are a theme extraction assistant. Analyze the provided user messages and extract key themes.
+
+Your task is to identify and categorize the following from the user's messages:
+
+1. **General Themes** (pick from this list ONLY):
+   - Work
+   - School
+   - Family
+   - Relationship
+   - Finances
+   - Health
+   - Loneliness
+   - Self-esteem
+   - Religion
+   - Other
+
+2. **Emotions** (identify distinct emotions the user is expressing):
+   Examples: Anxious, Frustrated, Hopeful, Sad, Angry, Overwhelmed, Confused, Grateful, Scared, Excited, Disappointed, Relieved
+
+3. **Entities** (extract specific names, nouns, or things that are the root cause or central to their concerns):
+   Examples: "Biology 101", "My Boss Karen", "Rent payment", "Job interview", "Mom", "Calculus exam"
+
+RULES:
+- Return EXACTLY between 1 and 5 themes total (combining all categories)
+- Prioritize the most significant/relevant themes
+- Be specific with entities when possible
+- Return your response as a valid JSON object with this exact structure:
+{
+  "themes": [
+    { "type": "theme", "value": "Work" },
+    { "type": "emotion", "value": "Anxious" },
+    { "type": "entity", "value": "Project deadline" }
+  ]
+}
+
+ONLY return the JSON object, nothing else.`;
+
+export interface ExtractedTheme {
+    type: "theme" | "emotion" | "entity";
+    value: string;
+}
+
+export interface ThemeExtractionResult {
+    themes: ExtractedTheme[];
+}

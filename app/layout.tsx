@@ -11,8 +11,10 @@ const quicksand = Quicksand({
 });
 
 export const metadata: Metadata = {
-  title: "Rambl - Don't Keep In Your Crash Outs",
-  description: "A playfully soft platform to help you ramble through your thoughts",
+  title: "Rambl",
+  description:
+    "A playfully soft platform to help you ramble through your thoughts",
+  icons: "/simple.svg",
 };
 
 export default function RootLayout({

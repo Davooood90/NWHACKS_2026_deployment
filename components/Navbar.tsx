@@ -127,9 +127,9 @@ const Navbar = () => {
 
           {/* Desktop CTA Button */}
           <div className="hidden md:flex items-center">
-            <button className="px-6 py-3 bg-[#7EC8E3] text-white font-bold rounded-[50px] shadow-pastel-blue hover:bg-[#5BA3C0] hover:-translate-y-0.5 transition-all duration-200">
+            <Link href="/login" className="px-6 py-3 bg-[#7EC8E3] text-white font-bold rounded-[50px] shadow-pastel-blue hover:bg-[#5BA3C0] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
               Get Started
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -167,9 +167,9 @@ const Navbar = () => {
               </a>
             ))}
             <div className="pt-4">
-              <button className="w-full py-4 bg-[#7EC8E3] text-white font-bold rounded-[50px] shadow-pastel-blue">
+              <Link href="/login" className="w-full py-4 bg-[#7EC8E3] text-white font-bold rounded-[50px] shadow-pastel-blue">
                 Get Started
-              </button>
+              </Link>
             </div>
           </div>
         </div>

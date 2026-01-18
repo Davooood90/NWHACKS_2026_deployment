@@ -14,13 +14,35 @@ export type ThemeType = "classic" | "soft-blue" | "lemon" | "mint";
 interface ThemeColors {
   bg: string;
   accent: string;
+  accentDark: string; // Darker version for text/buttons
+  accentLight: string; // Light version for backgrounds
 }
 
 export const themeColors: Record<ThemeType, ThemeColors> = {
-  classic: { bg: "#FFF9F5", accent: "#FFAEBC" },
-  "soft-blue": { bg: "#F0F7FF", accent: "#7EC8E3" },
-  lemon: { bg: "#FFFEF0", accent: "#FBE7C6" },
-  mint: { bg: "#F0FFF4", accent: "#B4F8C8" },
+  classic: {
+    bg: "#FFF9F5",
+    accent: "#FF8FA3",
+    accentDark: "#E85D75",
+    accentLight: "#FFAEBC",
+  },
+  "soft-blue": {
+    bg: "#F0F7FF",
+    accent: "#5BB5D5",
+    accentDark: "#3A9BC5",
+    accentLight: "#7EC8E3",
+  },
+  lemon: {
+    bg: "#FFFEF0",
+    accent: "#F5C842",
+    accentDark: "#D4A82E",
+    accentLight: "#FBE7C6",
+  },
+  mint: {
+    bg: "#F0FFF4",
+    accent: "#4FD18B",
+    accentDark: "#2FB36E",
+    accentLight: "#B4F8C8",
+  },
 };
 
 interface ThemeContextType {
@@ -77,14 +99,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Apply theme to document
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--theme-bg",
-      themeColors[theme].bg
-    );
-    document.documentElement.style.setProperty(
-      "--theme-accent",
-      themeColors[theme].accent
-    );
+    const colors = themeColors[theme];
+    document.documentElement.style.setProperty("--theme-bg", colors.bg);
+    document.documentElement.style.setProperty("--theme-accent", colors.accent);
+    document.documentElement.style.setProperty("--theme-accent-dark", colors.accentDark);
+    document.documentElement.style.setProperty("--theme-accent-light", colors.accentLight);
   }, [theme]);
 
   return (

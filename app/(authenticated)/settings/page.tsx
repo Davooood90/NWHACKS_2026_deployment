@@ -29,21 +29,21 @@ const personalities = [
     name: "Soothing",
     icon: Heart,
     description: "Soft, calm, reassuring",
-    color: "#FFAEBC",
+    color: "#FF8FA3",
   },
   {
     id: "clear" as PersonalityType,
     name: "Clear",
     icon: Zap,
     description: "Honest, logical",
-    color: "#7EC8E3",
+    color: "#5BB5D5",
   },
   {
     id: "bubbly" as PersonalityType,
     name: "Bubbly",
     icon: Sparkles,
     description: "High energy",
-    color: "#FBE7C6",
+    color: "#F5C842",
   },
 ];
 

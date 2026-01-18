@@ -99,7 +99,7 @@ export default function InitialInput({ onSubmit }: InitialInputProps) {
       </div>
 
       {/* Mode Toggle */}
-      <div className="flex gap-2 bg-white rounded-full p-1.5 shadow-md mb-8">
+      <div className="flex gap-2 bg-white rounded-full p-1.5 shadow-md mb-8 border border-[#F0F0F0]">
         <button
           onClick={() => setMode("text")}
           className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all cursor-pointer ${

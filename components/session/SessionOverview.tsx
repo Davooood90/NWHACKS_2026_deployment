@@ -15,6 +15,7 @@ interface WordData {
   text: string;
   weight: number;
   color: string;
+  bgColor?: string;
 }
 
 export default function SessionOverview({
@@ -189,19 +190,21 @@ export default function SessionOverview({
         .slice(0, 12);
 
       const maxCount = sortedWords[0]?.[1] || 1;
+      // Use darker, more vibrant colors for better readability
       const colorPalette = [
-        colors.accent,
-        "#7EC8E3",
-        "#B4F8C8",
-        "#FBE7C6",
-        "#E0BBE4",
-        "#FFAEBC",
+        { bg: `${colors.accentLight}50`, text: colors.accentDark },
+        { bg: "#7EC8E340", text: "#3A9BC5" },
+        { bg: "#4FD18B30", text: "#2FB36E" },
+        { bg: "#F5C84230", text: "#D4A82E" },
+        { bg: "#E0BBE440", text: "#9B6BA3" },
+        { bg: "#FF8FA330", text: "#E85D75" },
       ];
 
       const keywordData: WordData[] = sortedWords.map(([text, count], i) => ({
         text: text.charAt(0).toUpperCase() + text.slice(1),
         weight: Math.max(0.5, count / maxCount),
-        color: colorPalette[i % colorPalette.length],
+        color: colorPalette[i % colorPalette.length].text,
+        bgColor: colorPalette[i % colorPalette.length].bg,
       }));
 
       setKeywords(keywordData);
@@ -287,9 +290,9 @@ export default function SessionOverview({
             keywords.map((word, index) => (
               <span
                 key={index}
-                className="px-4 py-2 rounded-full font-medium transition-transform hover:scale-105 cursor-default"
+                className="px-4 py-2 rounded-full font-semibold transition-transform hover:scale-105 cursor-default shadow-sm"
                 style={{
-                  backgroundColor: `${word.color}25`,
+                  backgroundColor: word.bgColor || `${word.color}25`,
                   color: word.color,
                   fontSize: `${0.875 + word.weight * 0.5}rem`,
                 }}

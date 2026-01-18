@@ -6,25 +6,30 @@ const TeamSection = () => {
       name: "David",
       title: "Full Stack Developer",
       color: "#7EC8E3",
-      emoji: "🚀",
+      // Replace these URLs with your actual local paths (e.g., "/images/david.jpg")
+      image:
+        "https://i.pinimg.com/236x/68/31/12/68311248ba2f6e0ba94ff6da62eac9f6.jpg",
     },
     {
       name: "Sean",
       title: "AI/ML Engineer",
       color: "#FFAEBC",
-      emoji: "🤖",
+      image:
+        "https://i.pinimg.com/236x/68/31/12/68311248ba2f6e0ba94ff6da62eac9f6.jpg",
     },
     {
       name: "Daniel",
       title: "Backend Developer",
       color: "#B4F8C8",
-      emoji: "⚡",
+      image:
+        "https://i.pinimg.com/236x/68/31/12/68311248ba2f6e0ba94ff6da62eac9f6.jpg",
     },
     {
       name: "Cindy",
       title: "UI/UX Designer",
       color: "#FBE7C6",
-      emoji: "🎨",
+      image:
+        "https://i.pinimg.com/236x/68/31/12/68311248ba2f6e0ba94ff6da62eac9f6.jpg",
     },
   ];
 
@@ -44,10 +49,7 @@ const TeamSection = () => {
         {/* Team Cards - Horizontal Flex Wrap */}
         <div className="flex flex-wrap justify-center gap-8 md:gap-12 lg:gap-16">
           {teamMembers.map((member, idx) => (
-            <div
-              key={idx}
-              className="flex flex-col items-center group"
-            >
+            <div key={idx} className="flex flex-col items-center group">
               {/* Circular Avatar Frame */}
               <div className="relative mb-4">
                 {/* Outer ring with pastel color */}
@@ -55,24 +57,14 @@ const TeamSection = () => {
                   className="w-32 h-32 md:w-40 md:h-40 rounded-full p-2 transition-transform duration-300 group-hover:scale-105"
                   style={{ backgroundColor: member.color }}
                 >
-                  {/* Inner circle - placeholder for photo */}
-                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                    {/* Blob mascot as avatar placeholder */}
-                    <div
-                      className="w-20 h-20 md:w-24 md:h-24 rounded-blob animate-blob-wobble flex items-center justify-center"
-                      style={{ backgroundColor: `${member.color}80` }}
-                    >
-                      <span className="text-3xl md:text-4xl">{member.emoji}</span>
-                    </div>
+                  {/* Inner circle - Image Container */}
+                  <div className="w-full h-full rounded-full bg-white overflow-hidden relative">
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                </div>
-
-                {/* Floating decoration */}
-                <div
-                  className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center animate-float-gentle shadow-soft"
-                  style={{ backgroundColor: member.color }}
-                >
-                  <span className="text-white text-sm">✨</span>
                 </div>
               </div>
 
@@ -82,19 +74,26 @@ const TeamSection = () => {
               </h3>
 
               {/* Title */}
-              <p className="text-[#7A7A7A] font-medium">
-                {member.title}
-              </p>
+              <p className="text-[#7A7A7A] font-medium">{member.title}</p>
             </div>
           ))}
         </div>
 
         {/* Optional: Fun tagline */}
         <div className="text-center mt-16">
-          <div className="inline-flex items-center gap-3 px-8 py-4 bg-white rounded-[50px] shadow-soft">
-            <span className="text-2xl animate-float-gentle">🎉</span>
-            <span className="text-[#4A4A4A] font-medium">Built with love at nwHacks 2026</span>
-            <span className="text-2xl animate-float-gentle animation-delay-1000">💙</span>
+          <div className="inline-flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <span className="text-gray-600 font-medium">Built with</span>
+            {/* SVG Heart Icon */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-5 h-5 text-red-500 animate-pulse"
+            >
+              <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+            </svg>
+            <span className="text-gray-600 font-medium">at</span>
+            <span className="text-gray-600 font-bold">nwHacks 2026</span>
           </div>
         </div>
       </div>

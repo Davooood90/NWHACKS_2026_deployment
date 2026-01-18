@@ -118,66 +118,9 @@ const QuestionsSection = () => {
               {/* Happy Mascot */}
               <div className="animate-float-slow">
                 <div className="w-64 h-64 bg-[#FFAEBC] rounded-blob animate-blob-wobble opacity-90 relative">
-                  {/* Face */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    {/* Eyes - Happy/Closed */}
-                    <div className="flex gap-10 -mt-4">
-                      {/* Left eye - Happy arc */}
-                      <div className="relative">
-                        <svg className="w-10 h-6" viewBox="0 0 40 24">
-                          <path
-                            d="M4 20 Q20 0 36 20"
-                            stroke="white"
-                            strokeWidth="4"
-                            strokeLinecap="round"
-                            fill="none"
-                          />
-                        </svg>
-                      </div>
-                      {/* Right eye - Happy arc */}
-                      <div className="relative">
-                        <svg className="w-10 h-6" viewBox="0 0 40 24">
-                          <path
-                            d="M4 20 Q20 0 36 20"
-                            stroke="white"
-                            strokeWidth="4"
-                            strokeLinecap="round"
-                            fill="none"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Big smile */}
-                  <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2">
-                    <svg className="w-20 h-12" viewBox="0 0 80 48" fill="none">
-                      <path
-                        d="M8 16 Q40 56 72 16"
-                        stroke="white"
-                        strokeWidth="5"
-                        strokeLinecap="round"
-                        fill="none"
-                      />
-                    </svg>
-                  </div>
+                  Image
                 </div>
-
-                {/* Blush circles */}
-                <div className="absolute top-1/2 -left-4 w-10 h-7 bg-[#FF8FA3] rounded-full opacity-50" />
-                <div className="absolute top-1/2 -right-4 w-10 h-7 bg-[#FF8FA3] rounded-full opacity-50" />
               </div>
-
-              {/* Speech bubble */}
-              <div className="absolute -top-16 -right-8 animate-float animation-delay-1000">
-                <div className="bg-white rounded-[20px] px-6 py-3 shadow-soft">
-                  <span className="text-[#4A4A4A] font-medium">Ask away! 💬</span>
-                </div>
-                <div className="absolute bottom-0 left-8 w-4 h-4 bg-white rotate-45 -mb-2" />
-              </div>
-
-              {/* Floating hearts */}
-              <div className="absolute -top-4 left-4 text-2xl animate-float">💖</div>
-              <div className="absolute top-8 -right-8 text-xl animate-float-gentle animation-delay-2000">✨</div>
             </div>
           </div>
         </div>

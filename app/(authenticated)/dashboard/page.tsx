@@ -32,13 +32,6 @@ const themeColors = [
   "#E85D75",
 ];
 
-const getMoodIcon = (intensity: number | null) => {
-  if (intensity === null) return "😊";
-  if (intensity >= 70) return "😊";
-  if (intensity >= 40) return "😐";
-  return "😔";
-};
-
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -144,7 +137,6 @@ export default function DashboardPage() {
     loadDashboard();
   }, [router, supabase]);
 
-
   if (loading) {
     return (
       <div
@@ -240,7 +232,7 @@ export default function DashboardPage() {
           {/* Mood Chart */}
           <div className="bg-white rounded-2xl p-5 border border-[#F0F0F0] shadow-sm min-h-[240px]">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-[#4A4A4A]">Mood Intensity</h2>
+              <h2 className="font-bold text-[#4A4A4A]">Your Activity</h2>
               <span className="text-xs text-[#7A7A7A]">7 days</span>
             </div>
 
@@ -309,10 +301,10 @@ export default function DashboardPage() {
 
           {/* Top Themes */}
           <div className="bg-white rounded-2xl p-5 border border-[#F0F0F0] shadow-sm min-h-[240px]">
-            <h2 className="font-bold text-[#4A4A4A] mb-4">Top Themes</h2>
+            <h2 className="font-bold text-[#4A4A4A] mb-4">Your Top Themes</h2>
             <div className="space-y-3">
               {themes.length > 0 ? (
-                themes.slice(0, 4).map((theme, index) => (
+                themes.slice(0, 5).map((theme, index) => (
                   <div key={theme.id} className="flex items-center gap-3">
                     <div
                       className="w-2.5 h-2.5 rounded-full"
@@ -359,14 +351,6 @@ export default function DashboardPage() {
         <div className="border-t border-[#E0E0E0] pt-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-[#4A4A4A]">Past Sessions</h2>
-            {conversations.length > 0 && (
-              <button
-                className="text-sm font-medium hover:underline cursor-pointer"
-                style={{ color: colors.accent }}
-              >
-                View all →
-              </button>
-            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -375,13 +359,6 @@ export default function DashboardPage() {
                 key={conversation.id}
                 className="bg-white rounded-2xl p-5 border border-[#F0F0F0] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer"
               >
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl mb-4"
-                  style={{ backgroundColor: colors.bg }}
-                >
-                  {getMoodIcon(conversation.intensity_score)}
-                </div>
-
                 <p className="text-xs text-[#7A7A7A] mb-1">
                   {formatDate(conversation.created_at)}
                 </p>

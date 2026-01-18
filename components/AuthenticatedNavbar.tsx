@@ -37,7 +37,10 @@ const AuthenticatedNavbar = () => {
   const handleLogout = async () => {
     setLoading(true);
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error logging out with supabase:", error);
+      }
       router.push("/login");
     } catch (error) {
       console.error("Error logging out:", error);

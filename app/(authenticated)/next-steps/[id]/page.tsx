@@ -119,16 +119,16 @@ SCRIPT: [2-3 sentences they could say if approaching someone about the issue]`,
           const steps: ActionStep[] = [];
           for (let i = 1; i <= 4; i++) {
             const titleMatch = text.match(
-              new RegExp(`STEP${i}_TITLE:\\s*(.+?)(?=\\n|STEP|SCRIPT|$)`)
+              new RegExp(`STEP${i}_TITLE:\\s*(.+?)(?=\\n|STEP|SCRIPT|$)`),
             );
             const descMatch = text.match(
-              new RegExp(`STEP${i}_DESC:\\s*(.+?)(?=\\n|STEP|SCRIPT|$)`)
+              new RegExp(`STEP${i}_DESC:\\s*(.+?)(?=\\n|STEP|SCRIPT|$)`),
             );
             const timeMatch = text.match(
-              new RegExp(`STEP${i}_TIME:\\s*(.+?)(?=\\n|STEP|SCRIPT|$)`)
+              new RegExp(`STEP${i}_TIME:\\s*(.+?)(?=\\n|STEP|SCRIPT|$)`),
             );
             const iconMatch = text.match(
-              new RegExp(`STEP${i}_ICON:\\s*(.+?)(?=\\n|STEP|SCRIPT|$)`)
+              new RegExp(`STEP${i}_ICON:\\s*(.+?)(?=\\n|STEP|SCRIPT|$)`),
             );
 
             if (titleMatch && descMatch) {
@@ -141,7 +141,7 @@ SCRIPT: [2-3 sentences they could say if approaching someone about the issue]`,
             }
           }
 
-          const scriptMatch = text.match(/SCRIPT:\s*(.+?)$/s);
+          const scriptMatch = text.match(/SCRIPT:\s*([\s\S]+?)$/);
           if (scriptMatch) {
             setScript(scriptMatch[1].trim());
           }
@@ -171,7 +171,7 @@ SCRIPT: [2-3 sentences they could say if approaching someone about the issue]`,
                       "Identify one small, achievable action you can take to improve the situation.",
                     timeframe: "Next few days",
                   },
-                ]
+                ],
           );
         }
       } catch (error) {
@@ -195,8 +195,7 @@ SCRIPT: [2-3 sentences they could say if approaching someone about the issue]`,
           {
             icon: "target",
             title: "Set a Small Goal",
-            description:
-              "Identify one small, achievable action you can take.",
+            description: "Identify one small, achievable action you can take.",
             timeframe: "Next few days",
           },
         ]);
@@ -220,9 +219,7 @@ SCRIPT: [2-3 sentences they could say if approaching someone about the issue]`,
         >
           <Lightbulb size={32} style={{ color: colors.accent }} />
         </div>
-        <p className="text-[#7A7A7A] text-lg">
-          Creating your action plan...
-        </p>
+        <p className="text-[#7A7A7A] text-lg">Creating your action plan...</p>
       </div>
     );
   }
@@ -303,9 +300,7 @@ SCRIPT: [2-3 sentences they could say if approaching someone about the issue]`,
               >
                 <MessageSquare size={20} style={{ color: colors.accent }} />
               </div>
-              <h3 className="font-bold text-[#4A4A4A]">
-                Conversation Script
-              </h3>
+              <h3 className="font-bold text-[#4A4A4A]">Conversation Script</h3>
             </div>
             <div className="bg-[#F8F8F8] rounded-xl p-4">
               <p className="text-[#5A5A5A] text-sm leading-relaxed italic">

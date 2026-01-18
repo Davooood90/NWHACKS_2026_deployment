@@ -87,33 +87,36 @@ export default function DashboardPage() {
         const today = new Date();
         const dayOfWeek = today.getDay();
 
-        // Reorder days to end with today
         const reorderedDays = [
           ...last7Days.slice((dayOfWeek + 1) % 7),
           ...last7Days.slice(0, (dayOfWeek + 1) % 7),
         ];
 
-        // Get conversations from last 7 days and map to intensity
-        const moodByDay: Record<string, number[]> = {};
-        reorderedDays.forEach((day) => (moodByDay[day] = []));
+        // Initialize counts map
+        const activityByDay: Record<string, number> = {};
+        reorderedDays.forEach((day) => (activityByDay[day] = 0));
+
+        // Calculate date 7 days ago to filter old data
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // -6 ensures we include today + 6 previous days
+        sevenDaysAgo.setHours(0, 0, 0, 0);
 
         allConvData.forEach((conv) => {
           const convDate = new Date(conv.created_at);
-          const convDay = last7Days[convDate.getDay()];
-          if (conv.intensity_score !== null && moodByDay[convDay]) {
-            moodByDay[convDay].push(conv.intensity_score);
+
+          // Only count if the conversation happened in the last 7 days
+          if (convDate >= sevenDaysAgo) {
+            const convDay = last7Days[convDate.getDay()];
+            // Increment the count for that day
+            if (activityByDay[convDay] !== undefined) {
+              activityByDay[convDay] += 1;
+            }
           }
         });
 
         const chartData = reorderedDays.map((day) => ({
           day,
-          value:
-            moodByDay[day].length > 0
-              ? Math.round(
-                  moodByDay[day].reduce((a, b) => a + b, 0) /
-                    moodByDay[day].length,
-                )
-              : 50,
+          value: activityByDay[day],
         }));
 
         setMoodData(chartData);
@@ -157,13 +160,13 @@ export default function DashboardPage() {
     moodData.length > 0
       ? moodData
       : [
-          { day: "Mon", value: 50 },
-          { day: "Tue", value: 50 },
-          { day: "Wed", value: 50 },
-          { day: "Thu", value: 50 },
-          { day: "Fri", value: 50 },
-          { day: "Sat", value: 50 },
-          { day: "Sun", value: 50 },
+          { day: "Mon", value: 100 },
+          { day: "Tue", value: 100 },
+          { day: "Wed", value: 100 },
+          { day: "Thu", value: 100 },
+          { day: "Fri", value: 100 },
+          { day: "Sat", value: 100 },
+          { day: "Sun", value: 100 },
         ];
 
   const maxValue = Math.max(...chartMoodData.map((d) => d.value), 1);

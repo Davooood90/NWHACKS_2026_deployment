@@ -73,8 +73,7 @@ const TeamSection = () => {
                 >
                   {/* Inner circle - Image Container */}
                   <div className="w-full h-full rounded-full bg-white overflow-hidden relative">
-                    <img
-                      src={member.image}
+                    <img src={member.image}
                       alt={member.name}
                       className="w-full h-full object-cover"
                     />

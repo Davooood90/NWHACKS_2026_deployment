@@ -1,10 +1,41 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageSquare, Mic, MicOff, ArrowRight } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
 type InputMode = "text" | "voice";
+
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  onstart: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 interface InitialInputProps {
   onSubmit: (content: string, mode: InputMode) => void;
@@ -16,10 +47,18 @@ export default function InitialInput({ onSubmit }: InitialInputProps) {
   const [content, setContent] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [interimTranscript, setInterimTranscript] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Check for Web Speech API support - lazy initialization
+  const [speechSupported] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    return !!SpeechRecognition;
+  });
 
   // Auto-resize textarea
   useEffect(() => {
@@ -32,47 +71,78 @@ export default function InitialInput({ onSubmit }: InitialInputProps) {
     }
   }, [content]);
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
+  const startRecording = useCallback(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
-      };
+    if (!SpeechRecognition) {
+      console.error("Speech recognition not supported");
+      return;
+    }
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
-        // Here you would normally send to a speech-to-text service
-        // For now, we'll just note that recording completed
-        stream.getTracks().forEach((track) => track.stop());
-      };
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
 
-      mediaRecorder.start();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
       setIsRecording(true);
       setRecordingTime(0);
-
       timerRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
-    } catch (error) {
-      console.error("Error accessing microphone:", error);
-    }
-  };
+    };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let finalTranscript = "";
+      let interim = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+
+      if (finalTranscript) {
+        setContent((prev) => prev + (prev ? " " : "") + finalTranscript);
+      }
+      setInterimTranscript(interim);
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error("Speech recognition error:", event.error);
       setIsRecording(false);
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      setInterimTranscript("");
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+
+    recognition.start();
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+      setInterimTranscript("");
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     }
-  };
+  }, [isRecording]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -156,7 +226,30 @@ export default function InitialInput({ onSubmit }: InitialInputProps) {
           <div className="bg-white rounded-3xl shadow-lg p-8 border border-[#F0F0F0] text-center">
             {/* Voice Recording UI */}
             <div className="flex flex-col items-center">
-              {isRecording ? (
+              {!speechSupported ? (
+                <>
+                  <div
+                    className="w-32 h-32 rounded-full flex items-center justify-center mb-6"
+                    style={{ backgroundColor: "#F0F0F0" }}
+                  >
+                    <MicOff size={40} className="text-[#7A7A7A]" />
+                  </div>
+                  <p className="text-[#4A4A4A] font-medium mb-2">
+                    Voice input not supported
+                  </p>
+                  <p className="text-[#7A7A7A] text-sm mb-6">
+                    Please use Chrome or Edge for voice features
+                  </p>
+                  <button
+                    onClick={() => setMode("text")}
+                    className="flex items-center gap-2 px-8 py-4 text-white rounded-full font-semibold transition-all cursor-pointer"
+                    style={{ backgroundColor: colors.accent }}
+                  >
+                    <MessageSquare size={20} />
+                    Switch to Text
+                  </button>
+                </>
+              ) : isRecording ? (
                 <>
                   <div className="relative mb-6">
                     <div
@@ -176,7 +269,23 @@ export default function InitialInput({ onSubmit }: InitialInputProps) {
                   <p className="text-2xl font-bold text-[#4A4A4A] mb-2">
                     {formatTime(recordingTime)}
                   </p>
-                  <p className="text-[#7A7A7A] mb-6">Recording...</p>
+                  <p className="text-[#7A7A7A] mb-4">Listening...</p>
+
+                  {/* Live transcription display */}
+                  {(content || interimTranscript) && (
+                    <div className="w-full max-w-md mb-6 p-4 bg-[#F8F8F8] rounded-xl text-left">
+                      <p className="text-[#4A4A4A] text-sm leading-relaxed">
+                        {content}
+                        {interimTranscript && (
+                          <span className="text-[#9A9A9A] italic">
+                            {content ? " " : ""}
+                            {interimTranscript}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+
                   <button
                     onClick={stopRecording}
                     className="flex items-center gap-2 px-8 py-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors cursor-pointer"
@@ -193,17 +302,52 @@ export default function InitialInput({ onSubmit }: InitialInputProps) {
                   >
                     <Mic size={40} style={{ color: colors.accent }} />
                   </div>
-                  <p className="text-[#7A7A7A] mb-6">
-                    Tap to start speaking your thoughts
-                  </p>
-                  <button
-                    onClick={startRecording}
-                    className="flex items-center gap-2 px-8 py-4 text-white rounded-full font-semibold hover:-translate-y-0.5 transition-all cursor-pointer"
-                    style={{ backgroundColor: colors.accent }}
-                  >
-                    <Mic size={20} />
-                    Start Recording
-                  </button>
+
+                  {/* Show transcribed content if any */}
+                  {content ? (
+                    <>
+                      <div className="w-full max-w-md mb-6 p-4 bg-[#F8F8F8] rounded-xl text-left">
+                        <p className="text-[#4A4A4A] text-sm leading-relaxed">
+                          {content}
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={startRecording}
+                          className="flex items-center gap-2 px-6 py-3 border-2 rounded-full font-semibold transition-all cursor-pointer"
+                          style={{
+                            borderColor: colors.accent,
+                            color: colors.accent,
+                          }}
+                        >
+                          <Mic size={18} />
+                          Add More
+                        </button>
+                        <button
+                          onClick={handleSubmit}
+                          className="flex items-center gap-2 px-6 py-3 text-white rounded-full font-semibold hover:-translate-y-0.5 transition-all cursor-pointer"
+                          style={{ backgroundColor: colors.accent }}
+                        >
+                          Ready to listen
+                          <ArrowRight size={18} />
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[#7A7A7A] mb-6">
+                        Tap to start speaking your thoughts
+                      </p>
+                      <button
+                        onClick={startRecording}
+                        className="flex items-center gap-2 px-8 py-4 text-white rounded-full font-semibold hover:-translate-y-0.5 transition-all cursor-pointer"
+                        style={{ backgroundColor: colors.accent }}
+                      >
+                        <Mic size={20} />
+                        Start Recording
+                      </button>
+                    </>
+                  )}
                 </>
               )}
 

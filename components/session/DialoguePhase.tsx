@@ -1,12 +1,44 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Check, ArrowRight, Smile } from "lucide-react";
+import { Send, Check, ArrowRight, Smile, Mic, MicOff, Volume2 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import Image from "next/image";
 import UserAvatar from "@/components/UserAvatar";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { getPresetById } from "@/lib/prompts";
+
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  onstart: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 export interface Message {
   id: string;
@@ -15,21 +47,29 @@ export interface Message {
   timestamp: Date;
 }
 
+type InputMode = "text" | "voice";
+
 interface DialoguePhaseProps {
   initialMessage: string;
   presetId: string;
+  inputMode?: InputMode;
   onComplete: (messages: Message[]) => void;
 }
 
 export default function DialoguePhase({
   initialMessage,
   presetId,
+  inputMode = "text",
   onComplete,
 }: DialoguePhaseProps) {
   const { colors } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [currentMode, setCurrentMode] = useState<InputMode>(inputMode);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const initialMessageSentRef = useRef(false);
@@ -50,7 +90,17 @@ export default function DialoguePhase({
     };
     getUser();
   }, [supabase, user]);
-  
+    const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Check for Web Speech API support - lazy initialization
+  const [speechSupported] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    return !!SpeechRecognition;
+  });
+
   const scrollToBottom = () => {
     const container = messagesContainerRef.current;
     if (container && container.scrollHeight > container.clientHeight) {
@@ -72,10 +122,119 @@ export default function DialoguePhase({
       const scrollHeight = inputRef.current.scrollHeight;
       const maxHeight = 120;
       inputRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
-      // Only show scrollbar when content exceeds max height
       inputRef.current.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
     }
   }, [inputValue]);
+
+  // Text-to-speech using ElevenLabs with personality-based voice
+  const speakText = useCallback(
+    async (text: string) => {
+      if (currentMode !== "voice") return;
+
+      try {
+        setIsSpeaking(true);
+        
+        // Get the voice ID from the preset based on AI personality
+        const preset = getPresetById(presetId);
+        const voiceId = preset?.voiceId || "JBFqnCBsd6RMkjVDRZzb";
+
+        const response = await fetch("/api/elevenlabs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, voiceId }),
+        });
+
+        if (!response.ok) throw new Error("Failed to generate speech");
+
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+
+        const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+
+        audio.onended = () => {
+          setIsSpeaking(false);
+          URL.revokeObjectURL(audioUrl);
+        };
+
+        audio.onerror = () => {
+          setIsSpeaking(false);
+          URL.revokeObjectURL(audioUrl);
+        };
+
+        await audio.play();
+      } catch (error) {
+        console.error("Error with text-to-speech:", error);
+        setIsSpeaking(false);
+      }
+    },
+    [currentMode, presetId]
+  );
+
+  // Speech recognition for voice input
+  const startRecording = useCallback(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      console.error("Speech recognition not supported");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let finalTranscript = "";
+      let interim = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+
+      if (finalTranscript) {
+        setInputValue((prev) => prev + (prev ? " " : "") + finalTranscript);
+      }
+      setInterimTranscript(interim);
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error("Speech recognition error:", event.error);
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      setInterimTranscript("");
+    };
+
+    recognition.start();
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+      setInterimTranscript("");
+    }
+  }, [isRecording]);
 
   const sendMessage = useCallback(
     async (userMessage: string, history: Message[]) => {
@@ -107,6 +266,11 @@ export default function DialoguePhase({
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, aiMsg]);
+
+        // Speak the response if in voice mode
+        if (currentMode === "voice") {
+          speakText(data.text);
+        }
       } catch (error) {
         console.error("Error sending message:", error);
         const errorMsg: Message = {
@@ -117,11 +281,15 @@ export default function DialoguePhase({
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, errorMsg]);
+
+        if (currentMode === "voice") {
+          speakText(errorMsg.content);
+        }
       } finally {
         setIsLoading(false);
       }
     },
-    [presetId]
+    [presetId, currentMode, speakText]
   );
 
   // Send initial message on mount
@@ -130,7 +298,6 @@ export default function DialoguePhase({
       return;
     }
 
-    // Mark as sent immediately to prevent double-send in Strict Mode
     initialMessageSentRef.current = true;
 
     const userMsg: Message = {
@@ -166,6 +333,11 @@ export default function DialoguePhase({
   };
 
   const handleDone = () => {
+    // Stop any ongoing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsSpeaking(false);
+    }
     onComplete(messages);
   };
 
@@ -309,30 +481,120 @@ export default function DialoguePhase({
         )}
       </div>
 
+      {/* Speaking Indicator */}
+      {isSpeaking && (
+        <div className="flex-shrink-0 px-4 py-2">
+          <div
+            className="flex items-center justify-center gap-2 py-2 px-4 rounded-full mx-auto w-fit"
+            style={{ backgroundColor: `${colors.accent}20` }}
+          >
+            <Volume2
+              size={16}
+              className="animate-pulse"
+              style={{ color: colors.accent }}
+            />
+            <span className="text-sm" style={{ color: colors.accentDark }}>
+              Rambl is speaking...
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Input Area */}
       <div className="flex-shrink-0 px-4 pb-6 pt-2">
-        <div className="bg-white rounded-2xl shadow-lg border border-[#F0F0F0] max-h-[200px]">
-          {/* Text input */}
+        <div className="bg-white rounded-2xl shadow-lg border border-[#F0F0F0] overflow-hidden">
+          {/* Mode Toggle for voice users */}
+          {speechSupported && (
+            <div className="flex items-center gap-2 px-4 pt-3">
+              <button
+                onClick={() => setCurrentMode("text")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                  currentMode === "text"
+                    ? "text-white"
+                    : "text-[#7A7A7A] bg-[#F5F5F5] hover:bg-[#EBEBEB]"
+                }`}
+                style={
+                  currentMode === "text"
+                    ? { backgroundColor: colors.accent }
+                    : {}
+                }
+              >
+                <Send size={12} />
+                Text
+              </button>
+              <button
+                onClick={() => setCurrentMode("voice")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                  currentMode === "voice"
+                    ? "text-white"
+                    : "text-[#7A7A7A] bg-[#F5F5F5] hover:bg-[#EBEBEB]"
+                }`}
+                style={
+                  currentMode === "voice"
+                    ? { backgroundColor: colors.accent }
+                    : {}
+                }
+              >
+                <Mic size={12} />
+                Voice
+              </button>
+            </div>
+          )}
+
+          {/* Text input with optional mic button */}
           <div className="p-4 pb-3">
             <div className="flex items-end gap-3">
-              <textarea
-                ref={inputRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Share what's on your mind..."
-                disabled={isLoading}
-                rows={1}
-                className="flex-1 bg-[#F8F8F8] rounded-xl px-4 py-3 text-[#4A4A4A] placeholder-[#9A9A9A] focus:outline-none focus:ring-2 transition-all resize-none text-[15px] leading-relaxed"
-                style={
-                  {
-                    "--tw-ring-color": colors.accent,
-                  } as React.CSSProperties
-                }
-              />
+              {/* Voice recording button */}
+              {currentMode === "voice" && speechSupported && (
+                <button
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={isLoading || isSpeaking}
+                  className={`w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-105 hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 cursor-pointer flex-shrink-0 ${
+                    isRecording ? "bg-red-500 animate-pulse" : ""
+                  }`}
+                  style={!isRecording ? { backgroundColor: colors.accent } : {}}
+                >
+                  {isRecording ? (
+                    <MicOff size={18} className="text-white" />
+                  ) : (
+                    <Mic size={18} className="text-white" />
+                  )}
+                </button>
+              )}
+
+              <div className="flex-1 relative">
+                <textarea
+                  ref={inputRef}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={
+                    isRecording
+                      ? "Listening..."
+                      : currentMode === "voice"
+                        ? "Tap the mic or type here..."
+                        : "Share what's on your mind..."
+                  }
+                  disabled={isLoading || isSpeaking}
+                  rows={1}
+                  className="w-full bg-[#F8F8F8] rounded-xl px-4 py-3 text-[#4A4A4A] placeholder-[#9A9A9A] focus:outline-none focus:ring-2 transition-all resize-none text-[15px] leading-relaxed"
+                  style={
+                    {
+                      "--tw-ring-color": colors.accent,
+                    } as React.CSSProperties
+                  }
+                />
+                {/* Interim transcript indicator */}
+                {interimTranscript && (
+                  <div className="absolute bottom-full left-0 mb-1 px-3 py-1 bg-[#4A4A4A] text-white text-xs rounded-lg max-w-full truncate">
+                    {interimTranscript}
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={handleSend}
-                disabled={!inputValue.trim() || isLoading}
+                disabled={!inputValue.trim() || isLoading || isSpeaking}
                 className="w-11 h-11 rounded-full flex items-center justify-center text-white transition-all hover:scale-105 hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 cursor-pointer flex-shrink-0"
                 style={{ backgroundColor: colors.accent }}
               >

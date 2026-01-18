@@ -218,6 +218,7 @@ export default function SessionPage() {
             <DialoguePhase
               initialMessage={initialContent}
               presetId={presetId}
+              inputMode={inputMode}
               onComplete={handleDialogueComplete}
             />
           )}

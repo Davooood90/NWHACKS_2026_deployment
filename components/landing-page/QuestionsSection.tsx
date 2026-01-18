@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import Image from "next/image";
 
 const QuestionsSection = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -104,16 +105,15 @@ const QuestionsSection = () => {
           </div>
 
           {/* Right Column - Smiling Mascot (40%) */}
-          <div className="lg:col-span-2 hidden lg:flex items-center justify-center relative min-h-[400px]">
-            <div className="relative">
-              {/* Happy Mascot */}
-              <div className="animate-float-slow">
-                <div className="w-56 h-56 bg-[#FFAEBC] rounded-blob animate-blob-wobble opacity-90 relative"></div>
-              </div>
-
-              {/* Speech bubble */}
-              <div className="absolute -top-12 -right-4 animate-float animation-delay-1000">
-                <div className="absolute bottom-0 left-6 w-3 h-3 bg-white border-r border-b border-[#E5E5E5] rotate-45 -mb-1.5" />
+          <div className="flex my-auto">
+            <div className="relative animate-float-gentle">
+              <div className="w-64 h-64 md:w-80 md:h-80 relative">
+                <Image
+                  src="/mascot-confused.svg"
+                  alt="Thinking Rambl Mascot"
+                  fill
+                  className="object-contain"
+                />
               </div>
             </div>
           </div>

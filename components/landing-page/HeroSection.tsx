@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+
 const HeroSection = () => {
   return (
     <section
@@ -71,10 +73,16 @@ const HeroSection = () => {
       </div>
 
       {/* Floating Mascot - Blue Blob Character */}
-      <div className="absolute bottom-8 sm:bottom-16 left-1/2 -translate-x-1/2 z-0 pointer-events-none">
+      <div className="absolute bottom-0 left-20 -translate-x-1/2 z-0 pointer-events-none">
         <div className="relative animate-float-slow">
-          {/* Main blob body */}
-          <div className="w-40 h-40 sm:w-52 sm:h-52 md:w-64 md:h-64 bg-[#7EC8E3] opacity-20 rounded-blob animate-blob-wobble relative"></div>
+          <div className="w-180 h-180 sm:w-152 sm:h-152 md:w-164 md:h-164 relative">
+            <Image
+              src="/mascot-happy.svg"
+              alt="Excited Rambl Mascot"
+              fill
+              className="object-contain opacity-90" // Adjust opacity if you want it subtle, or remove for full color
+            />
+          </div>
         </div>
       </div>
     </section>

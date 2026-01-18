@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 
 const MotivationSection = () => {
   const factCards = [
@@ -56,10 +57,16 @@ const MotivationSection = () => {
           </div>
 
           {/* Right Column - Sad/Thinking Mascot */}
-          <div className="flex justify-center lg:justify-end">
+          <div className="flex justify-center ">
             <div className="relative animate-float-gentle">
-              {/* Mascot - Thinking blob */}
-              <div className="w-64 h-64 md:w-80 md:h-80 bg-[#A0E7E5] rounded-blob animate-blob-wobble opacity-90 relative"></div>
+              <div className="w-64 h-64 md:w-80 md:h-80 relative">
+                <Image
+                  src="/mascot-chill.svg"
+                  alt="Thinking Rambl Mascot"
+                  fill
+                  className="object-contain "
+                />
+              </div>
             </div>
           </div>
         </div>

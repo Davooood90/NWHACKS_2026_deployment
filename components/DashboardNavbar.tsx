@@ -6,23 +6,37 @@ import { LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
 import UserAvatar from "./UserAvatar";
 
 export default function DashboardNavbar() {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    const getUser = async () => {
+    const loadUserAndAvatar = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      setUser(user);
+
+      if (user) {
+        // Load custom avatar from avatar_photos table
+        const { data: avatarData } = await supabase
+          .from("avatar_photos")
+          .select("avatar_url")
+          .eq("user_id", user.id)
+          .single();
+
+        if (avatarData?.avatar_url) {
+          setAvatarUrl(avatarData.avatar_url);
+        } else {
+          // Fall back to OAuth avatar
+          setAvatarUrl(user.user_metadata?.avatar_url || null);
+        }
+      }
     };
-    getUser();
-  }, [supabase.auth]);
+    loadUserAndAvatar();
+  }, [supabase.auth, supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -60,7 +74,7 @@ export default function DashboardNavbar() {
             title="Settings"
           >
             <UserAvatar
-              avatarUrl={user?.user_metadata?.avatar_url}
+              avatarUrl={avatarUrl}
               size="sm"
             />
           </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -78,6 +78,9 @@ export default function SettingsPage() {
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Load user and preferences
   useEffect(() => {
@@ -99,7 +102,20 @@ export default function SettingsPage() {
       setUserName(name);
       setUserEmail(session.user.email || "");
       setUserInitial(name.charAt(0).toUpperCase());
-      setUserAvatarUrl(session.user.user_metadata?.avatar_url || null);
+
+      // Load avatar from avatar_photos table (takes priority over OAuth avatar)
+      const { data: avatarData } = await supabase
+        .from("avatar_photos")
+        .select("avatar_url")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (avatarData?.avatar_url) {
+        setUserAvatarUrl(avatarData.avatar_url);
+      } else {
+        // Fall back to OAuth avatar if no custom avatar
+        setUserAvatarUrl(session.user.user_metadata?.avatar_url || null);
+      }
 
       // Load preferences from database
       const { data: preferences } = await supabase
@@ -200,6 +216,96 @@ export default function SettingsPage() {
       setUserInitial(userName.charAt(0).toUpperCase());
       setProfileSaveSuccess(true);
       setTimeout(() => setProfileSaveSuccess(false), 2000);
+    }
+  };
+
+  // Handle avatar upload
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    // Reset error state
+    setAvatarError(null);
+
+    // Validate file type (must be an image)
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Please select an image file.");
+      return;
+    }
+
+    // Validate file size (max 5 MB)
+    const maxSize = 5 * 1024 * 1024; // 5 MB in bytes
+    if (file.size > maxSize) {
+      setAvatarError("Image must be smaller than 5 MB.");
+      return;
+    }
+
+    setAvatarUploading(true);
+
+    try {
+      // Create the file path: {user_id}/{filename}
+      const filePath = `${userId}/${file.name}`;
+
+      // Upload to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from("avatar_photos")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true, // Overwrite if file exists
+        });
+
+      if (uploadError) {
+        setAvatarError("Failed to upload image. Please try again.");
+        setAvatarUploading(false);
+        return;
+      }
+
+      // Get the public URL
+      const { data: urlData } = supabase.storage
+        .from("avatar_photos")
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      // Check if user already has an avatar record
+      const { data: existingAvatar } = await supabase
+        .from("avatar_photos")
+        .select("user_id")
+        .eq("user_id", userId)
+        .single();
+
+      let dbError;
+      if (existingAvatar) {
+        // Update existing record
+        const { error } = await supabase
+          .from("avatar_photos")
+          .update({ avatar_url: publicUrl })
+          .eq("user_id", userId);
+        dbError = error;
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from("avatar_photos")
+          .insert({ user_id: userId, avatar_url: publicUrl });
+        dbError = error;
+      }
+
+      if (dbError) {
+        setAvatarError("Failed to save avatar. Please try again.");
+        setAvatarUploading(false);
+        return;
+      }
+
+      // Update local state with the new avatar URL
+      setUserAvatarUrl(publicUrl);
+    } catch {
+      setAvatarError("An unexpected error occurred. Please try again.");
+    } finally {
+      setAvatarUploading(false);
+      // Reset file input
+      if (avatarInputRef.current) {
+        avatarInputRef.current.value = "";
+      }
     }
   };
 
@@ -535,18 +641,38 @@ export default function SettingsPage() {
               <div className="flex flex-col items-center">
                 <p className="text-sm font-bold text-[#4A4A4A] mb-4">Avatar</p>
                 <div className="relative">
-                  <UserAvatar
-                    avatarUrl={userAvatarUrl}
-                    fallbackInitial={userInitial}
-                    size="xl"
-                  />
-                  <button className="absolute bottom-0 right-0 w-10 h-10 bg-white rounded-full border-2 border-[#F0F0F0] flex items-center justify-center hover:bg-[#F5F5F5] transition-colors cursor-pointer shadow-sm">
+                  {avatarUploading ? (
+                    <div className="w-32 h-32 rounded-full bg-[#7EC8E3] flex items-center justify-center">
+                      <Loader2 size={32} className="text-white animate-spin" />
+                    </div>
+                  ) : (
+                    <UserAvatar
+                      avatarUrl={userAvatarUrl}
+                      fallbackInitial={userInitial}
+                      size="xl"
+                    />
+                  )}
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={avatarUploading}
+                    className="absolute bottom-0 right-0 w-10 h-10 bg-white rounded-full border-2 border-[#F0F0F0] flex items-center justify-center hover:bg-[#F5F5F5] transition-colors cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <Camera size={18} className="text-[#7A7A7A]" />
                   </button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
                 </div>
                 <p className="text-xs text-[#7A7A7A] mt-3">
-                  Click to upload photo
+                  {avatarUploading ? "Uploading..." : "Click to upload photo"}
                 </p>
+                {avatarError && (
+                  <p className="text-xs text-red-500 mt-2">{avatarError}</p>
+                )}
               </div>
             </div>
           </div>

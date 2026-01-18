@@ -4,6 +4,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Check, ArrowRight, Smile } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import Image from "next/image";
+import UserAvatar from "@/components/UserAvatar";
+import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 export interface Message {
   id: string;
@@ -30,7 +33,24 @@ export default function DialoguePhase({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const initialMessageSentRef = useRef(false);
+  const supabase = createClient();
+  const [user, setUser] = useState<User | null>(null);
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
 
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      const { data: avatarData } = await supabase
+        .from("avatar_photos")
+        .select("avatar_url")
+        .eq("user_id", user?.id)
+        .single();
+      setUserAvatarUrl(avatarData?.avatar_url || user?.user_metadata?.avatar_url || null);
+    };
+    getUser();
+  }, [supabase, user]);
+  
   const scrollToBottom = () => {
     const container = messagesContainerRef.current;
     if (container && container.scrollHeight > container.clientHeight) {
@@ -171,7 +191,7 @@ export default function DialoguePhase({
                   alt="Rambl"
                   width={24}
                   height={24}
-                  className="w-6 h-6 brightness-0 invert"
+                  className="w-6 h-6"
                 />
               </div>
             )}
@@ -229,7 +249,15 @@ export default function DialoguePhase({
             {/* User Avatar */}
             {message.role === "user" && (
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#4A4A4A] flex items-center justify-center shadow-sm">
-                <Smile size={20} className="text-white" />
+                {user ? (
+                  <UserAvatar
+                    avatarUrl={userAvatarUrl}
+                    fallbackInitial={user.user_metadata?.full_name}
+                    size="sm"
+                  />
+                ) : 
+                  <Smile size={20} className="text-white" />
+                }
               </div>
             )}
           </div>

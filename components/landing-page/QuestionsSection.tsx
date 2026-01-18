@@ -30,7 +30,7 @@ const QuestionsSection = () => {
     {
       question: "What if I'm in crisis?",
       answer:
-        "If you're experiencing a mental health crisis, please reach out to a crisis helpline immediately. In the US, you can call or text 988 for the Suicide & Crisis Lifeline. Rambl will also provide crisis resources if it detects you may need immediate help.",
+        "If you're experiencing a mental health crisis, please reach out to a crisis helpline immediately. You can call or text 988 for the Suicide & Crisis Lifeline. Rambl will also provide crisis resources if it detects you may need immediate help.",
     },
   ];
 

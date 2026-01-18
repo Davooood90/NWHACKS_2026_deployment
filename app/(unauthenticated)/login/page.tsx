@@ -1,11 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Login from "@/components/Login";
 import SignUp from "@/components/SignUp";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const supabase = createClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push("/dashboard");
+      } else {
+        setIsCheckingAuth(false);
+      }
+    };
+    checkAuth();
+  }, [supabase.auth, router]);
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-pulse text-xl text-[#7A7A7A]">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4 sm:px-6 lg:px-8">

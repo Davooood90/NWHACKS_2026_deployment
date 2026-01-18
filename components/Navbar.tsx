@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Wind } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
-// 1. Optional: Define a type for your link objects for better safety
 type NavLink = {
   name: string;
   href: string;
@@ -13,6 +12,7 @@ type NavLink = {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("#home");
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const navLinks: NavLink[] = [
     { name: "Home", href: "#home" },
@@ -23,13 +23,21 @@ const Navbar = () => {
   ];
 
   useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
     const observerOptions = {
       root: null,
       rootMargin: "-40% 0px -40% 0px",
       threshold: 0,
     };
 
-    // 2. FIX: Add type 'IntersectionObserverEntry[]' for entries
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -49,9 +57,8 @@ const Navbar = () => {
     });
 
     return () => observer.disconnect();
-  }, [navLinks]); // Added navLinks to dependency array for safety
+  }, [navLinks]);
 
-  // 3. FIX: Add type 'React.MouseEvent' for the event and 'string' for href
   const handleLinkClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
     href: string,
@@ -67,38 +74,49 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
+    <nav
+      className={`fixed w-full z-50 transition-all duration-300 ${
+        isScrolled
+          ? "bg-white/90 backdrop-blur-md shadow-soft"
+          : "bg-transparent"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
+          {/* Logo */}
           <Link
             href="#home"
-            // We cast the event here to satisfy the handler
             onClick={(e) =>
               handleLinkClick(
                 e as unknown as React.MouseEvent<HTMLAnchorElement>,
                 "#home",
               )
             }
-            className="flex-shrink-0 flex items-center gap-2 cursor-pointer group"
+            className="flex-shrink-0 flex items-center gap-3 cursor-pointer group"
           >
-            <div className="w-8 h-8 rounded-full bg-[#FFAEBC] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-              <Wind size={18} className="text-white" />
+            {/* Mini Mascot Logo */}
+            <div className="w-10 h-10 bg-[#7EC8E3] rounded-blob animate-blob-wobble flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="flex gap-1">
+                <div className="w-1.5 h-2 bg-white rounded-full" />
+                <div className="w-1.5 h-2 bg-white rounded-full" />
+              </div>
             </div>
-            <span className="font-black text-xl tracking-tighter text-gray-800">
-              Rambl
+            <span className="font-bold text-2xl tracking-tight text-[#4A4A4A]">
+              rambl
             </span>
           </Link>
 
-          <div className="hidden md:flex space-x-8">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
                 onClick={(e) => handleLinkClick(e, link.href)}
-                className={`text-sm font-bold transition-colors duration-200 cursor-pointer ${
+                className={`px-4 py-2 text-sm font-bold rounded-[50px] transition-all duration-200 cursor-pointer ${
                   activeTab === link.href
-                    ? "text-[#FFAEBC]"
-                    : "text-gray-500 hover:text-gray-900"
+                    ? "bg-[#7EC8E3]/20 text-[#7EC8E3]"
+                    : "text-[#7A7A7A] hover:text-[#4A4A4A] hover:bg-[#F5F5F5]"
                 }`}
               >
                 {link.name}
@@ -106,16 +124,18 @@ const Navbar = () => {
             ))}
           </div>
 
+          {/* Desktop CTA Button */}
           <div className="hidden md:flex items-center">
-            <button className="px-5 py-2.5 bg-[#4A4A4A] text-white text-sm font-bold rounded-xl shadow-lg hover:bg-black hover:-translate-y-0.5 transition-all duration-200">
+            <button className="px-6 py-3 bg-[#7EC8E3] text-white font-bold rounded-[50px] shadow-pastel-blue hover:bg-[#5BA3C0] hover:-translate-y-0.5 transition-all duration-200">
               Get Started
             </button>
           </div>
 
+          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-500 hover:text-gray-700 focus:outline-none"
+              className="w-12 h-12 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#4A4A4A] hover:bg-[#E5E5E5] transition-colors"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -123,31 +143,36 @@ const Navbar = () => {
         </div>
       </div>
 
-      {isOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 absolute w-full left-0 shadow-xl">
-          <div className="px-4 pt-2 pb-6 space-y-2">
+      {/* Mobile Menu */}
+      <div
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="bg-white/95 backdrop-blur-md border-t border-[#E5E5E5] shadow-soft-lg">
+          <div className="px-4 pt-4 pb-6 space-y-2">
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
                 onClick={(e) => handleLinkClick(e, link.href)}
-                className={`block px-3 py-3 rounded-xl text-base font-bold transition-colors ${
+                className={`block px-4 py-4 rounded-[24px] text-base font-bold transition-all ${
                   activeTab === link.href
-                    ? "bg-[#FFF9F1] text-[#FFAEBC]"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-[#7EC8E3]/20 text-[#7EC8E3]"
+                    : "text-[#4A4A4A] hover:bg-[#F5F5F5]"
                 }`}
               >
                 {link.name}
               </a>
             ))}
             <div className="pt-4">
-              <button className="w-full py-3 bg-[#4A4A4A] text-white font-bold rounded-xl shadow-md">
+              <button className="w-full py-4 bg-[#7EC8E3] text-white font-bold rounded-[50px] shadow-pastel-blue">
                 Get Started
               </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };

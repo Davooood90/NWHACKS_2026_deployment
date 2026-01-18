@@ -53,14 +53,20 @@ const HeroSection = () => {
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 items-center w-full sm:w-auto">
           {/* Get Started - Primary pill button */}
-          <Link href="/login" className="w-full sm:w-auto px-10 py-4 bg-[#7EC8E3] text-white font-bold text-lg rounded-[50px] shadow-pastel-blue hover:bg-[#5BA3C0] hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+          <Link
+            href="/login"
+            className="flex items-center justify-center w-full sm:w-auto px-10 py-4 bg-[#7EC8E3] text-white font-bold text-lg rounded-[50px] shadow-lg hover:bg-[#5BA3C0] hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#7EC8E3] focus:ring-offset-2"
+          >
             Get Started
           </Link>
 
           {/* Learn More - Ghost pill button */}
-          <button className="w-full sm:w-auto px-10 py-4 bg-transparent border-2 border-[#7EC8E3] text-[#7EC8E3] font-bold text-lg rounded-[50px] hover:bg-[#7EC8E3]/10 hover:-translate-y-1 transition-all duration-300">
+          <Link
+            href="/#motivation"
+            className="flex items-center justify-center w-full sm:w-auto px-10 py-4 bg-transparent border-2 border-[#7EC8E3] text-[#7EC8E3] font-bold text-lg rounded-[50px] hover:bg-[#7EC8E3]/10 hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#7EC8E3] focus:ring-offset-2"
+          >
             Learn More
-          </button>
+          </Link>
         </div>
       </div>
 

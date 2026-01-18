@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image"; // Added Import
 import { Menu, X } from "lucide-react";
 
 type NavLink = {
@@ -94,13 +95,13 @@ const Navbar = () => {
             }
             className="flex-shrink-0 flex items-center gap-3 cursor-pointer group"
           >
-            {/* Mini Mascot Logo */}
-            <div className="w-10 h-10 bg-[#7EC8E3] rounded-blob animate-blob-wobble flex items-center justify-center group-hover:scale-110 transition-transform">
-              <div className="flex gap-1">
-                <div className="w-1.5 h-2 bg-white rounded-full" />
-                <div className="w-1.5 h-2 bg-white rounded-full" />
-              </div>
-            </div>
+            <Image
+              src="/icon.svg"
+              alt="rambl logo"
+              width={32}
+              height={32}
+              className="w-8 h-8 object-contain"
+            />
             <span className="font-bold text-2xl tracking-tight text-[#4A4A4A]">
               rambl
             </span>

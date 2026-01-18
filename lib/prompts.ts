@@ -6,6 +6,56 @@ export interface PromptPreset {
     voiceId: string;
 }
 
+export type ValidationDepthType = "concise" | "deep";
+export type ActionStyleType = "gentle" | "direct";
+
+// Modifiers that get appended to the base prompt based on user settings
+export const depthModifiers: Record<ValidationDepthType, string> = {
+    concise: `
+Response Length & Depth:
+- Keep responses SHORT and to the point (2-4 sentences max per message)
+- Offer quick emotional validation without extensive analysis
+- Like a comforting text from a friend - brief but meaningful
+- Get to the heart of the matter quickly without over-explaining
+`,
+    deep: `
+Response Length & Depth:
+- Provide thoughtful, more detailed responses when appropriate
+- Explore the underlying emotions and root causes with the user
+- Offer deeper reflections and help the user process their feelings more thoroughly
+- Take time to unpack complex emotions and situations
+- Ask thoughtful follow-up questions to understand the full picture
+`
+};
+
+export const actionModifiers: Record<ActionStyleType, string> = {
+    gentle: `
+Guidance Approach:
+- Offer suggestions softly, using phrases like "you might consider..." or "when you're ready..."
+- Never push the user toward any particular action
+- Focus primarily on emotional validation before any suggestions
+- Let the user lead - only offer guidance if they seem open to it
+- Use gentle language: "perhaps", "maybe", "if it feels right"
+`,
+    direct: `
+Guidance Approach:
+- After validating feelings, offer clear, actionable suggestions
+- Be straightforward about potential steps the user could take
+- Use confident language: "I'd recommend...", "here's what could help..."
+- Proactively suggest coping strategies or next steps
+- Balance empathy with practical, solution-oriented guidance
+`
+};
+
+export function buildSystemPrompt(
+    presetId: string,
+    depth: ValidationDepthType = "concise",
+    action: ActionStyleType = "gentle"
+): string {
+    const preset = getPresetById(presetId) || getDefaultPreset();
+    return `${preset.systemPrompt}\n\n${depthModifiers[depth]}\n\n${actionModifiers[action]}`;
+}
+
 
 export const presets: PromptPreset[] = [
     {

@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  Send,
-  Check,
-  Smile,
-  Mic,
-  MicOff,
-  Volume2,
-} from "lucide-react";
+import { Send, Check, Smile, Mic, MicOff, Volume2 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import UserAvatar from "@/components/UserAvatar";
 import { createClient } from "@/lib/supabase/client";
@@ -53,12 +46,17 @@ export interface Message {
   timestamp: Date;
 }
 
+type ValidationDepthType = "concise" | "deep";
+type ActionStyleType = "gentle" | "direct";
+
 type InputMode = "text" | "voice";
 
 interface DialoguePhaseProps {
   initialMessage: string;
   presetId: string;
   inputMode?: InputMode;
+  depth?: ValidationDepthType;
+  action?: ActionStyleType;
   onComplete: (messages: Message[]) => void;
 }
 
@@ -66,6 +64,8 @@ export default function DialoguePhase({
   initialMessage,
   presetId,
   inputMode = "text",
+  depth = "concise",
+  action = "gentle",
   onComplete,
 }: DialoguePhaseProps) {
   const { colors } = useTheme();
@@ -262,6 +262,8 @@ export default function DialoguePhase({
               role: msg.role,
               content: msg.content,
             })),
+            depth,
+            action,
           }),
         });
 

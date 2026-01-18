@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
-import { getPresetById, getDefaultPreset } from "@/lib/prompts";
+import { buildSystemPrompt, ValidationDepthType, ActionStyleType } from "@/lib/prompts";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -36,15 +36,16 @@ async function generateWithModel(
 
 export async function POST(req: Request) {
     try {
-        const { presetId, userMessage, history = [] } = await req.json() as {
+        const { presetId, userMessage, history = [], depth = "concise", action = "gentle" } = await req.json() as {
             presetId: string;
             userMessage: string;
             history: HistoryMessage[];
+            depth?: ValidationDepthType;
+            action?: ActionStyleType;
         };
 
-        // Get the system prompt from the preset
-        const preset = presetId ? getPresetById(presetId) : getDefaultPreset();
-        const systemInstruction = preset!.systemPrompt;
+        // Build the system prompt with personality, depth, and action modifiers
+        const systemInstruction = buildSystemPrompt(presetId || "soothing", depth, action);
 
         let text: string;
 

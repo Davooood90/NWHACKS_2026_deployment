@@ -9,6 +9,7 @@ import { useTheme } from "@/context/ThemeContext";
 import InitialInput from "@/components/session/InitialInput";
 import DialoguePhase, { Message } from "@/components/session/DialoguePhase";
 import SessionOverview from "@/components/session/SessionOverview";
+import { ValidationDepthType, ActionStyleType } from "@/lib/prompts";
 
 type SessionPhase = "input" | "dialogue" | "overview";
 type InputMode = "text" | "voice";
@@ -23,6 +24,9 @@ export default function SessionPage() {
   const [sessionMessages, setSessionMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [presetId, setPresetId] = useState("soothing");
+  const [validationDepth, setValidationDepth] =
+    useState<ValidationDepthType>("concise");
+  const [actionStyle, setActionStyle] = useState<ActionStyleType>("gentle");
 
   // Check authentication and load user preferences
   useEffect(() => {
@@ -39,18 +43,20 @@ export default function SessionPage() {
       // Load user's AI personality preference
       const { data: preferences } = await supabase
         .from("preferences")
-        .select("ai_personality")
+        .select("ai_personality, ai_style, ai_action")
         .eq("user_id", session.user.id)
         .single();
 
-      if (preferences?.ai_personality) {
-        // Map personality to preset ID
+      if (preferences) {
         const personalityMap: Record<string, string> = {
           soothing: "soothing",
           clear: "Rational",
           bubbly: "Bubbly",
         };
         setPresetId(personalityMap[preferences.ai_personality] || "soothing");
+
+        if (preferences.ai_style) setValidationDepth(preferences.ai_style);
+        if (preferences.ai_action) setActionStyle(preferences.ai_action);
       }
 
       setLoading(false);
@@ -218,6 +224,8 @@ export default function SessionPage() {
             <DialoguePhase
               initialMessage={initialContent}
               presetId={presetId}
+              depth={validationDepth}
+              action={actionStyle}
               inputMode={inputMode}
               onComplete={handleDialogueComplete}
             />

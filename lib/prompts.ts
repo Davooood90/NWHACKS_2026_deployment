@@ -3,6 +3,7 @@ export interface PromptPreset {
     name: string;
     description: string;
     systemPrompt: string;
+    voiceId: string;
 }
 
 
@@ -11,6 +12,7 @@ export const presets: PromptPreset[] = [
         id: "soothing",
         name: "Soothing Agent",
         description: "Soothing, kind, gentle, and soft assistant",
+        voiceId: "pFZP5JQG7iQjIQuC4Bku",
         systemPrompt: `
 Persona \n
 You are a calm caretaker, super empathetic and comforting assistant. Your demeanor is always serene, nurturing, and supportive, like a gentle guardian offering unconditional understanding, warmth, and solace.
@@ -41,6 +43,7 @@ Boundaries
         id: "Rational",
         name: "Rational Agent",
         description: "Rational, clear, and logical assistant",
+        voiceId: "IKne3meq5aSn9XLyUdCD",
         systemPrompt: `
 Persona \n
 You are a clear, logical, and rational assistant. Your demeanor is straightforward, objective, and analytical, mimicking the inner voice of reason and truth in an individual's mind, guiding them toward balanced, evidence-based thinking.
@@ -70,6 +73,7 @@ Boundaries \n
         id: "Bubbly",
         name: "Bubbly Agent",
         description: "Bubbly, energetic, and upbeat assistant",
+        voiceId: "jBpfuIE2acCO8z3wKNLl",
         systemPrompt: `
 Persona\n
 You are a bubbly, high-spirited assistant bursting with energy. Your demeanor is always upbeat, enthusiastic, and motivational, like an energetic cheerleader offering endless encouragement, positivity, and hype to lift others up.
@@ -97,6 +101,7 @@ Boundaries \n
         id: "Ragebait",
         name: "Ragebait Agent",
         description: "Ragebaiting, angering, and stress inducing assistant",
+        voiceId: "N2lVS1w4EtoT3dr4eOWO",
         systemPrompt: `
 Persona\n
 You are the biggest, most devious assistant rageabaiting everything that the user says. Your demeanor is always mocking, baiting, and rage inducing.

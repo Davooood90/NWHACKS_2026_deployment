@@ -27,12 +27,18 @@ export default function DialoguePhase({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const initialMessageSentRef = useRef(false);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (container && container.scrollHeight > container.clientHeight) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   };
 
   useEffect(() => {
@@ -43,7 +49,11 @@ export default function DialoguePhase({
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
-      inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 120)}px`;
+      const scrollHeight = inputRef.current.scrollHeight;
+      const maxHeight = 120;
+      inputRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+      // Only show scrollbar when content exceeds max height
+      inputRef.current.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
     }
   }, [inputValue]);
 
@@ -142,7 +152,7 @@ export default function DialoguePhase({
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)] max-w-3xl mx-auto">
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -269,13 +279,11 @@ export default function DialoguePhase({
             </div>
           </div>
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
       <div className="flex-shrink-0 px-4 pb-6 pt-2">
-        <div className="bg-white rounded-2xl shadow-lg border border-[#F0F0F0] overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-lg border border-[#F0F0F0] max-h-[200px]">
           {/* Text input */}
           <div className="p-4 pb-3">
             <div className="flex items-end gap-3">

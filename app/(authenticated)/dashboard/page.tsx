@@ -14,7 +14,6 @@ interface Conversation {
   title: string | null;
   summary: string | null;
   words: string[] | null;
-  intensity_score: number | null;
 }
 
 interface Theme {

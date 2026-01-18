@@ -177,7 +177,6 @@ export default function SessionOverview({
             title: generatedTitle,
             summary: generatedSummary,
             words: keywordStrings,
-            intensity_score: intensityScore,
           })
           .select()
           .single();
